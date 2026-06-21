@@ -22,13 +22,24 @@ Web app works end-to-end against a synthetic mock feed (validated in-browser, DO
 - `editor.html`: drag/select/properties/save-load/background/live-preview; save round-trip works
   (`PUT 200 -> GET 200`).
 - Wire contract in `PROTOCOL.md`; element catalog in `src/public/js/elements.js`.
+- Engine export written + wired in the fork (`feat/cl-hudexport`): `src/hud_export_fmt.h` (shared
+  serializer), `src/cl_hudexport.{c,h}`, `misc/hudexport/` self-test. The serializer compiles clean
+  (`-Wall -Wextra`) and the path C serializer -> UDP -> bridge -> WebSocket -> overlay renders at
+  ~60fps / ~0ms age in a backgrounded tab (validated 2026-06-21). NOT yet built into a client.
+- Overlay renders on each WS frame (not requestAnimationFrame), so it doesn't freeze when the
+  window/OBS source is backgrounded; throttled to ~70fps.
 
 ## Next smallest useful step
-Land the ezQuake engine export (`cl_hudexport`): a per-frame UDP JSON push of the tracked player's
-`cl.stats` + teaminfo + clock, on a branch of `Xerialen/ezquake-source`. Code is source-cited and
-ready (see `docs/findings-log.md`). **Build is the open item** — no MSVC/CMake on the Windows host;
-WSL2 has gcc 13 + cmake 3.28, so cross-compile to a Windows `.exe` via the `mingw64-x64-cross` preset
-(needs confirming the mingw toolchain / a light apt install in WSL2 — a dev-env provisioning choice).
+**Build the ezQuake fork** with `cl_hudexport` so the overlay runs off the real game (currently it
+runs off the mock + the C self-test). The module is written, wired, and committed on fork branch
+`feat/cl-hudexport` (local, not pushed); its serializer + UDP path are validated end-to-end. The one
+open item is a toolchain (system-provisioning decision, deliberately not done unprompted):
+- **A. WSL2 cross-build** (preferred): apt-install `mingw-w64` + `ninja` in Ubuntu-24.04, bootstrap
+  vcpkg, `cmake --preset mingw64-x64-cross` -> a Windows `ezquake.exe`. Keeps MSVC off the gaming box.
+- **B. MSVC on Windows**: install VS 2022 "Desktop development with C++" + bootstrap vcpkg (~1.5h, GBs).
+Either is an apt/installer change to flag first. Then update the clone to the fork's current master
+(local HEAD 2026-01-31 < lab exe 2026-05-17), build, run a demo with `cl_hudexport 1`, and confirm
+the overlay tracks the game. The engine change also needs independent cross-model review before merge.
 
 ## Active constraints
 - Engine export must work in demo/MVD playback, not just live (use a dedicated UDP socket, NOT
