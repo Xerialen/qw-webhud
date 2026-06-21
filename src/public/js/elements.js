@@ -154,10 +154,22 @@ export const ELEMENTS = {
     size: 2.2,
     defaultOpts: { keep: 5 },
     render(node, el, state) {
-      const kf = state?.events?.killfeed || [];
+      // engine ships events.messages as raw QW obituaries + chat; parse the kills into compact
+      // "killer -> victim" (r_tracker style). Non-kills (chat "name: msg", engine prints) yield null.
+      const parseKill = (line) => {
+        line = (line || '').trim();
+        if (!line || /^\S+:\s/.test(line)) return null;                       // chat "para: lost..."
+        let m = line.match(/^(.+?)\s+(?:was|were)\b.*?\bby\s+(.+?)[.!]?$/i);    // "VICTIM was ... by KILLER"
+        if (m) return { killer: m[2].trim(), victim: m[1].trim() };
+        m = line.match(/^(\S+)\b.*?\b([^\s']+)'s\b/);                          // "KILLER ... VICTIM's weapon"
+        if (m && m[1] !== m[2]) return { killer: m[1].trim(), victim: m[2].trim() };
+        return null;                                                          // suicide / unknown / noise
+      };
+      let kills = (state?.events?.messages || []).map(parseKill).filter(Boolean);
+      kills = kills.filter((k, i) => i === 0 || k.killer !== kills[i - 1].killer || k.victim !== kills[i - 1].victim);
       const keep = el.opts?.keep ?? 5;
-      node.innerHTML = kf.slice(0, keep).map(k =>
-        `<div class="kf-row"><span class="kf-k">${esc(k.killer)}</span> <span class="kf-w">${esc(k.weapon || '')}</span> <span class="kf-v">${esc(k.victim)}</span></div>`
+      node.innerHTML = kills.slice(0, keep).map(k =>
+        `<div class="kf-row"><span class="kf-k">${esc(k.killer)}</span> <span class="kf-w">»</span> <span class="kf-v">${esc(k.victim)}</span></div>`
       ).join('');
     },
   },

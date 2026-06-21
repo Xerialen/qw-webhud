@@ -21,7 +21,9 @@
     import { DEFAULT_SPEC } from '/js/specs.js';
 
     const params = new URLSearchParams(location.search);
-    if (params.get('bg') === 'check') document.body.classList.add('check');
+    const bg = params.get('bg');
+    if (bg === 'check') document.body.classList.add('check');
+    else if (bg) document.body.style.background = `#000 url("${bg}") center/cover no-repeat`;  // composite plate
 
     const stage = new Stage(document.getElementById('stage'));
     const feed = new Feed();
@@ -34,6 +36,10 @@
       if (r.ok) spec = await r.json();
     } catch {}
     stage.setSpec(spec);
+
+    // initial render from the last snapshot, so a fresh load / headless screenshot shows data
+    // immediately (before the first WebSocket frame arrives).
+    try { const r0 = await fetch('/api/snapshot'); if (r0.ok) { const s0 = await r0.json(); if (s0 && s0.seq != null) stage.update(s0); } } catch {}
 
     // debug readout (toggle with 'd')
     const dbg = document.getElementById('dbg');
