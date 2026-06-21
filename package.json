@@ -1,0 +1,14 @@
+{
+  "name": "qw-webhud",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Live, editable web HUD overlay for ezQuake/QuakeWorld - realtime in-game state, edited in a browser mockup. Zero runtime dependencies.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node src/bridge.js",
+    "dev": "node src/bridge.js --mock",
+    "mock": "node src/feeds/mock.js"
+  },
+  "license": "MIT"
+}

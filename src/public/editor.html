@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>qw-webhud · editor</title>
+  <link rel="stylesheet" href="/css/hud.css">
+  <link rel="stylesheet" href="/css/editor.css">
+</head>
+<body class="editor">
+  <header id="toolbar">
+    <div class="grp">
+      <strong>qw&#8209;webhud</strong><span class="muted">editor</span>
+    </div>
+    <div class="grp">
+      <label>spec</label>
+      <input type="text" id="specName" value="hub">
+      <button id="btnLoad">Load</button>
+      <button id="btnSave" class="primary">Save</button>
+    </div>
+    <div class="grp">
+      <label>add</label>
+      <select id="addType"></select>
+      <button id="btnAdd">+ Add</button>
+    </div>
+    <div class="grp">
+      <label>bg</label>
+      <button id="btnBg">Upload</button>
+      <button id="btnBgClear">Clear</button>
+      <input type="file" id="bgFile" accept="image/*" hidden>
+    </div>
+    <div class="grp">
+      <button id="btnGrid" class="toggle">Grid</button>
+      <button id="btnLive" class="toggle">&#9654; Live</button>
+      <a href="/overlay.html?bg=check&dbg" target="_blank"><button>Open overlay &#8599;</button></a>
+    </div>
+    <div id="status"></div>
+  </header>
+
+  <main id="workspace">
+    <div id="stagewrap">
+      <div id="screen">
+        <img id="bg" alt="">
+        <div id="stage" class="stage"></div>
+      </div>
+    </div>
+    <aside id="props">
+      <div class="empty">Click an element to edit it.<br><br>
+        Drag to move · arrow keys nudge<br>(<span class="kbd">Shift</span> = bigger steps)</div>
+    </aside>
+  </main>
+
+  <script type="module" src="/js/editor.js"></script>
+</body>
+</html>

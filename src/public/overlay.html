@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>qw-webhud · overlay</title>
+  <link rel="stylesheet" href="/css/hud.css">
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+    /* checkerboard only when opened with ?bg=check, so you can see the transparent overlay in a normal tab */
+    body.check { background:
+      conic-gradient(#2a2a2a 25%, #1d1d1d 0 50%, #2a2a2a 0 75%, #1d1d1d 0) 0 0 / 40px 40px; }
+  </style>
+</head>
+<body class="overlay">
+  <div id="stage" class="stage"></div>
+  <div id="dbg" class="dbg" hidden></div>
+  <script type="module">
+    import { Feed } from '/js/feed.js';
+    import { Stage } from '/js/render.js';
+    import { DEFAULT_SPEC } from '/js/specs.js';
+
+    const params = new URLSearchParams(location.search);
+    if (params.get('bg') === 'check') document.body.classList.add('check');
+
+    const stage = new Stage(document.getElementById('stage'));
+    const feed = new Feed();
+
+    // Spec: try the server's saved spec, else the built-in default.
+    const specName = params.get('spec') || 'hub';
+    let spec = DEFAULT_SPEC;
+    try {
+      const r = await fetch('/api/specs/' + encodeURIComponent(specName));
+      if (r.ok) spec = await r.json();
+    } catch {}
+    stage.setSpec(spec);
+
+    // debug readout (toggle with 'd')
+    const dbg = document.getElementById('dbg');
+    let showDbg = params.has('dbg');
+    dbg.hidden = !showDbg;
+    addEventListener('keydown', (e) => { if (e.key === 'd') { showDbg = !showDbg; dbg.hidden = !showDbg; } });
+
+    function tick() {
+      const s = feed.getLatest();
+      stage.update(s);
+      if (showDbg) {
+        dbg.textContent = `conn ${feed.connected ? 'ok' : '...'}  fps ${feed.fps}  age ${feed.age === Infinity ? '-' : feed.age.toFixed(0) + 'ms'}  seq ${s?.seq ?? '-'}  src ${s?.src ?? '-'}`;
+      }
+      requestAnimationFrame(tick);
+    }
+    feed.connect();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

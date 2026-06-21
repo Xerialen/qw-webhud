@@ -1,0 +1,81 @@
+/* hud.css — the HUD look. Elements positioned by render.js; sizes are em-relative to each
+   element's font-size (which = stage-height% * scale), so everything scales with the window. */
+:root { --hud-font: "Trebuchet MS", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif; }
+
+.stage {
+  position: absolute; inset: 0;
+  pointer-events: none;            /* overlay must not eat game/page clicks */
+  font-family: var(--hud-font);
+  font-weight: 800;
+  overflow: hidden;
+}
+
+.hel {
+  position: absolute;
+  white-space: nowrap;
+  line-height: 1;
+  text-align: var(--align, center);
+  /* heavy outline so the HUD is legible over any background */
+  text-shadow: 0 0 2px #000, 1px 1px 1px #000, -1px 1px 1px #000, 1px -1px 1px #000, -1px -1px 1px #000;
+}
+
+/* big numbers (health / armour / ammo) */
+.hel-bigstat { font-weight: 900; }
+.bs-val { letter-spacing: -0.03em; }
+
+/* ammo pool counts */
+.hel-ammocounts { display: flex; gap: 0.5em; }
+.ac-item { opacity: 0.8; }
+.ac-active { opacity: 1; text-shadow: 0 0 4px currentColor, 0 0 2px #000; }
+
+/* weapons owned */
+.hel-weapons { display: flex; gap: 0.35em; }
+.wp { padding: 0 0.1em; }
+.wp-miss { opacity: 0.22; color: #fff; }
+.wp-have { opacity: 0.85; color: #fff; }
+.wp-active { opacity: 1; color: #ffd24a; text-shadow: 0 0 5px #ffd24a, 0 0 2px #000; }
+
+/* powerups */
+.hel-powerups { display: flex; gap: 0.5em; font-weight: 900; }
+
+/* team score bar */
+.hel-teamscore { display: flex; align-items: center; gap: 0.5em; }
+.ts-side { display: inline-flex; align-items: center; gap: 0.3em; }
+.ts-right { flex-direction: row-reverse; }
+.ts-box { display: inline-block; width: 0.8em; height: 0.8em; border: 1px solid rgba(0,0,0,0.6); }
+.ts-name { color: #fff; }
+.ts-frags { color: #fff; font-weight: 900; }
+.ts-sep { opacity: 0.55; }
+
+/* game clock */
+.hel-gameclock { color: #fff; font-weight: 900; }
+
+/* teammate panel */
+.hel-teaminfo { display: flex; flex-direction: column; gap: 0.15em; }
+.ti-row { display: grid; grid-template-columns: 2.6em 4.5em 1.8em 1.8em 2em; gap: 0.3em; align-items: baseline; text-align: right; }
+.ti-loc { color: #bbd8c0; text-align: left; }
+.ti-name { color: #fff; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+.ti-w { color: #9fd0ff; }
+
+/* tracking line */
+.hel-tracking .trk { color: #fff; }
+
+/* kill feed */
+.hel-killfeed { display: flex; flex-direction: column; gap: 0.1em; text-align: right; }
+.kf-k { color: #9ff1c0; }
+.kf-w { color: #ff7a4a; }
+.kf-v { color: #ffb3b3; }
+
+/* center print */
+.hel-centerprint { color: #fff; text-align: center; font-weight: 900; }
+
+/* crosshair */
+.hel-crosshair { color: #2ecc40; opacity: 0.85; }
+
+/* debug readout */
+.dbg {
+  position: fixed; left: 6px; bottom: 6px; z-index: 9999;
+  font: 12px/1.4 ui-monospace, Consolas, monospace; color: #0f0;
+  background: rgba(0,0,0,0.6); padding: 3px 7px; border-radius: 3px;
+  pointer-events: none; white-space: pre;
+}
