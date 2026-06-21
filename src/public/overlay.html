@@ -40,17 +40,24 @@
     let showDbg = params.has('dbg');
     dbg.hidden = !showDbg;
     addEventListener('keydown', (e) => { if (e.key === 'd') { showDbg = !showDbg; dbg.hidden = !showDbg; } });
-
-    function tick() {
-      const s = feed.getLatest();
-      stage.update(s);
-      if (showDbg) {
-        dbg.textContent = `conn ${feed.connected ? 'ok' : '...'}  fps ${feed.fps}  age ${feed.age === Infinity ? '-' : feed.age.toFixed(0) + 'ms'}  seq ${s?.seq ?? '-'}  src ${s?.src ?? '-'}`;
-      }
-      requestAnimationFrame(tick);
+    function paintDbg(s) {
+      if (!showDbg) return;
+      dbg.textContent = `conn ${feed.connected ? 'ok' : '...'}  fps ${feed.fps}  age ${feed.age === Infinity ? '-' : feed.age.toFixed(0) + 'ms'}  seq ${s?.seq ?? '-'}  src ${s?.src ?? '-'}`;
     }
+
+    // Render on each received frame, NOT via requestAnimationFrame: rAF is paused while the tab /
+    // window is backgrounded (or behind the game), which would freeze the HUD. WebSocket messages
+    // still fire when backgrounded. Throttle to ~display rate so a high-FPS engine can't flood the DOM.
+    let lastPaint = 0;
+    feed.onFrame((s) => {
+      const now = performance.now();
+      if (now - lastPaint < 14) return;   // cap ~70 fps
+      lastPaint = now;
+      stage.update(s);
+      paintDbg(s);
+    });
     feed.connect();
-    requestAnimationFrame(tick);
+    setInterval(() => paintDbg(feed.getLatest()), 500); // keep the age field fresh if frames pause
   </script>
 </body>
 </html>
