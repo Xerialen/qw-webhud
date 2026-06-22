@@ -37,13 +37,18 @@
     } catch {}
     stage.setSpec(spec);
 
-    // optional theme: spec.meta.theme === 'minecraft' -> blocky pixel font + pixelated icons (body.mc).
-    // The pixel webfont is loaded only for themed specs so the default HUD stays dependency-free.
-    if (spec.meta?.theme === 'minecraft') {
-      document.body.classList.add('mc');
+    // optional theme: spec.meta.theme -> a body class + a webfont, loaded only for themed specs so the
+    // default HUD stays dependency-free. Styling lives in hud.css (body.mc, body.br, ...).
+    const THEMES = {
+      minecraft:   { cls: 'mc', font: 'Press+Start+2P' },
+      bladerunner: { cls: 'br', font: 'Orbitron:wght@500;700;900' },
+    };
+    const theme = THEMES[spec.meta?.theme];
+    if (theme) {
+      document.body.classList.add(theme.cls);
       const f = document.createElement('link');
       f.rel = 'stylesheet';
-      f.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap';
+      f.href = 'https://fonts.googleapis.com/css2?family=' + theme.font + '&display=swap';
       document.head.appendChild(f);
     }
 

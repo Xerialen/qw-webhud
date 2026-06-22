@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "name": "milton-br",
+    "baseW": 640, "baseH": 360,
+    "theme": "bladerunner",
+    "notes": "Milton's whole player-POV HUD, heavily Blade Runner themed: Orbitron neon readouts, holographic screen-blended glyphs (health/armor/power) + eye emblem, CRT scanlines + vignette grade. Live data-bound numbers, ammo pools, weapons, powerups, clock, tracking, obituary log."
+  },
+  "elements": [
+    { "id": "hdr",    "type": "text",      "x": 2,  "y": 5,  "anchor": "lt", "scale": 0.5, "z": 6, "opts": { "text": "NEXUS-6 // TYRELL CORP" } },
+    { "id": "eye",    "type": "image",     "x": 11, "y": 20, "anchor": "cc", "scale": 2.3, "z": 2, "opts": { "src": "/img/br-eye.png", "alt": "esper" } },
+    { "id": "clock",  "type": "gameclock", "x": 50, "y": 6,  "anchor": "ct", "scale": 1.0, "z": 6 },
+    { "id": "kf",     "type": "killfeed",  "x": 98, "y": 9,  "anchor": "rt", "scale": 0.62, "z": 5, "opts": { "align": "right", "keep": 5 } },
+    { "id": "powi",   "type": "image",     "x": 45, "y": 19, "anchor": "cc", "scale": 1.0, "z": 5, "opts": { "src": "/img/br-power.png", "alt": "power" } },
+    { "id": "pups",   "type": "powerups",  "x": 50, "y": 19, "anchor": "lc", "scale": 0.7, "z": 5 },
+    { "id": "trk",    "type": "tracking",  "x": 50, "y": 79, "anchor": "cb", "scale": 0.66, "z": 4 },
+    { "id": "armi",   "type": "image",     "x": 28, "y": 89, "anchor": "cc", "scale": 1.3, "z": 3, "opts": { "src": "/img/br-armor.png", "alt": "armor" } },
+    { "id": "arm",    "type": "bigstat",   "x": 33, "y": 91, "anchor": "cc", "scale": 0.85, "z": 3, "opts": { "kind": "armor" } },
+    { "id": "hrti",   "type": "image",     "x": 42, "y": 89, "anchor": "cc", "scale": 1.3, "z": 3, "opts": { "src": "/img/br-health.png", "alt": "health" } },
+    { "id": "hp",     "type": "bigstat",   "x": 48, "y": 91, "anchor": "cc", "scale": 0.85, "z": 3, "opts": { "kind": "health" } },
+    { "id": "am",     "type": "bigstat",   "x": 62, "y": 91, "anchor": "cc", "scale": 0.85, "z": 3, "opts": { "kind": "ammo" } },
+    { "id": "amc",    "type": "ammocounts","x": 62, "y": 96, "anchor": "cc", "scale": 0.6, "z": 2 },
+    { "id": "spd",    "type": "speed",     "x": 86, "y": 91, "anchor": "cc", "scale": 0.66, "z": 3 },
+    { "id": "weps",   "type": "weapons",   "x": 50, "y": 99, "anchor": "cb", "scale": 0.72, "z": 2 }
+  ]
+}
