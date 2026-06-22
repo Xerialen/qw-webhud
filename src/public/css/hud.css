@@ -72,6 +72,43 @@
 /* crosshair */
 .hel-crosshair { color: #2ecc40; opacity: 0.85; }
 
+/* image / icon — height tracks the element font-size; drop-shadow gives the same legible outline
+   the text elements get from text-shadow (text-shadow doesn't apply to <img>). */
+.hel-image { line-height: 0; }
+.hud-img { height: 1em; width: auto; display: block;
+  filter: drop-shadow(0 0 2px #000) drop-shadow(1px 1px 1px rgba(0,0,0,0.85)); }
+
+/* ---- Minecraft theme: body.mc (set by the overlay when spec.meta.theme === 'minecraft') ----
+   blocky pixel font + hard 1-px-style shadow + nearest-neighbour (pixelated) icon scaling. */
+body.mc .stage { font-family: "Press Start 2P", "Courier New", monospace; font-weight: 400; }
+body.mc .hel { letter-spacing: 0;
+  text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000; }
+body.mc .bs-val { letter-spacing: 0; }
+body.mc .hel-gameclock, body.mc .hel-teamscore, body.mc .hel-powerups { font-weight: 400; }
+body.mc .hud-img { image-rendering: pixelated;
+  filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.9)); }
+
+/* ---- Blade Runner theme: body.br (spec.meta.theme === 'bladerunner') ----
+   Orbitron + neon cyan/amber glow, holographic screen-blend icons (rendered on black), CRT scanlines
+   and a vignette/teal-amber grade over the whole frame. */
+body.br .stage { font-family: "Orbitron", "Share Tech Mono", monospace; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; }
+body.br .hel { color: #d6fbff;
+  text-shadow: 0 0 6px #00e5ff, 0 0 16px rgba(0,179,204,0.8), 0 0 2px #000; }
+/* amber accents: clock, active weapon, killfeed separator */
+body.br .hel-gameclock, body.br .wp-active, body.br .kf-w {
+  color: #ffb000 !important; text-shadow: 0 0 6px #ff9d2f, 0 0 16px rgba(255,106,0,0.85), 0 0 2px #000; }
+/* glyphs rendered on black -> screen-blend drops the black and glows over the scene (hologram look) */
+body.br .hud-img { image-rendering: auto; mix-blend-mode: screen;
+  filter: drop-shadow(0 0 6px rgba(0,229,255,0.5)) saturate(1.25) brightness(1.05); }
+/* full-frame CRT: vignette + teal/amber grade, then scanlines, over the whole stage */
+body.br .stage::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 9000;
+  background:
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 52%, rgba(0,0,0,0.55) 100%),
+    linear-gradient(180deg, rgba(0,60,80,0.14), rgba(50,18,0,0.16)); }
+body.br .stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 9001;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1px, rgba(0,0,0,0) 1px 3px); }
+
 /* debug readout */
 .dbg {
   position: fixed; left: 6px; bottom: 6px; z-index: 9999;

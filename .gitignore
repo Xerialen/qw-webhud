@@ -1,0 +1,11 @@
+
+# generated capture artifacts
+scripts/composite.png
+scripts/chrome_err.txt
+src/public/_clean3d.jpg
+
+# qw-hud-bom exported redesign packages
+briefs/
+
+# raw (pre-cutout) outputs from scripts/gen_hud_icon.py
+src/public/img/*-raw.png

@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "name": "demoshots",
+    "baseW": 640, "baseH": 360,
+    "notes": "OBS-composite demoshots look: hub.quakeworld.nu layout (score bar top-center, teaminfo right, bottom health/armor/ammo row) for the web HUD layered over the ezQuake 3D capture. No web crosshair -- the engine renders its own in the captured 3D view. Positions are in % so the same spec works at 1280x720 and 1920x1080."
+  },
+  "elements": [
+    { "id": "score",       "type": "teamscore",   "x": 50, "y": 4,  "anchor": "ct", "scale": 1.0, "z": 5 },
+    { "id": "clock",       "type": "gameclock",   "x": 50, "y": 11, "anchor": "ct", "scale": 1.0, "z": 5 },
+    { "id": "teaminfo",    "type": "teaminfo",    "x": 99, "y": 50, "anchor": "rc", "scale": 1.0, "z": 4, "opts": { "align": "right" } },
+    { "id": "killfeed",    "type": "killfeed",    "x": 99, "y": 17, "anchor": "rt", "scale": 1.0, "z": 4, "opts": { "align": "right", "keep": 5 } },
+    { "id": "tracking",    "type": "tracking",    "x": 50, "y": 85, "anchor": "cb", "scale": 1.0, "z": 3 },
+    { "id": "powerups",    "type": "powerups",    "x": 50, "y": 79, "anchor": "cc", "scale": 1.0, "z": 3 },
+    { "id": "armor",       "type": "bigstat",     "x": 38, "y": 94, "anchor": "cb", "scale": 1.0, "z": 3, "opts": { "kind": "armor" } },
+    { "id": "health",      "type": "bigstat",     "x": 50, "y": 94, "anchor": "cb", "scale": 1.0, "z": 3, "opts": { "kind": "health" } },
+    { "id": "ammo",        "type": "bigstat",     "x": 62, "y": 94, "anchor": "cb", "scale": 1.0, "z": 3, "opts": { "kind": "ammo" } },
+    { "id": "ammocounts",  "type": "ammocounts",  "x": 88, "y": 97, "anchor": "rb", "scale": 1.0, "z": 2 },
+    { "id": "weapons",     "type": "weapons",     "x": 50, "y": 99, "anchor": "cb", "scale": 1.0, "z": 2 },
+    { "id": "centerprint", "type": "centerprint", "x": 50, "y": 40, "anchor": "cc", "scale": 1.0, "z": 6 }
+  ]
+}

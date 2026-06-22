@@ -19,6 +19,7 @@ const SPECS  = path.join(PUBLIC, 'specs');
 const HTTP_PORT = Number(process.env.HUD_HTTP_PORT || 7777);
 const UDP_PORT  = Number(process.env.HUD_UDP_PORT  || 27999);
 const USE_MOCK  = process.argv.includes('--mock');
+let lastSnapshot = null;   // most recent UDP snapshot, served at GET /api/snapshot (immediate render on load / headless)
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -32,7 +33,10 @@ const log = (...a) => console.log('[qw-webhud]', ...a);
 const send = (res, code, body, headers = {}) => { res.writeHead(code, headers); res.end(body); };
 
 async function handleApi(req, res, u) {
-  const parts = u.pathname.split('/').filter(Boolean); // ['api','specs', name?]
+  const parts = u.pathname.split('/').filter(Boolean); // ['api', 'specs'|'snapshot', ...]
+  if (parts[1] === 'snapshot') {
+    return send(res, 200, lastSnapshot || '{}', { 'content-type': 'application/json', 'cache-control': 'no-cache' });
+  }
   if (parts[1] !== 'specs') return send(res, 404, 'not found');
   await fs.promises.mkdir(SPECS, { recursive: true });
 
@@ -69,7 +73,8 @@ async function handleHttp(req, res) {
   let p = decodeURIComponent(u.pathname);
   if (p === '/' || p === '') p = '/overlay.html';
   const filePath = path.normalize(path.join(PUBLIC, p));
-  if (!filePath.startsWith(PUBLIC)) return send(res, 403, 'forbidden');
+  const relPath = path.relative(PUBLIC, filePath);
+  if (relPath.startsWith('..') || path.isAbsolute(relPath)) return send(res, 403, 'forbidden');
   try {
     const data = await fs.promises.readFile(filePath);
     send(res, 200, data, { 'content-type': MIME[path.extname(filePath)] || 'application/octet-stream',
@@ -86,7 +91,7 @@ server.listen(HTTP_PORT, '127.0.0.1', () =>
 // --- UDP ingest -> WS broadcast ---
 const udp = dgram.createSocket('udp4');
 let frames = 0;
-udp.on('message', (msg) => { frames++; ws.broadcast(msg.toString('utf8')); });
+udp.on('message', (msg) => { frames++; lastSnapshot = msg.toString('utf8'); ws.broadcast(lastSnapshot); });
 udp.on('error', (e) => log('udp error', e.message));
 udp.bind(UDP_PORT, '127.0.0.1', () =>
   log(`feed <- udp 127.0.0.1:${UDP_PORT}  (ezQuake cl_hudexport_port)`));
