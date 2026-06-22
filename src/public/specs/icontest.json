@@ -1,0 +1,11 @@
+{
+  "meta": {
+    "name": "icontest",
+    "baseW": 640, "baseH": 360,
+    "notes": "Verify the image element renders a /img asset, sized/positioned in stage %-space. Placeholder until a generated SDXL icon is dropped in."
+  },
+  "elements": [
+    { "id": "clock", "type": "gameclock", "x": 50, "y": 6,  "anchor": "ct", "scale": 1.0, "z": 5 },
+    { "id": "icon1", "type": "image",     "x": 50, "y": 50, "anchor": "cc", "scale": 4.0, "z": 3, "opts": { "src": "/img/quad.png", "alt": "quad" } }
+  ]
+}

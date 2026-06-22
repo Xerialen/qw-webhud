@@ -216,6 +216,21 @@ export const ELEMENTS = {
     defaultOpts: { text: 'TEXT' },
     render(node, el) { node.textContent = el.opts?.text ?? ''; },
   },
+
+  image: {
+    label: 'Image / icon (from /img)',
+    size: 6,
+    defaultOpts: { src: '', alt: '' },
+    render(node, el) {
+      // <img> height tracks the element font-size (size x scale x stage-height) so it stays
+      // resolution-independent; width auto-keeps aspect. Rebuild only when the source changes, so
+      // live state frames don't reload/flicker the image every tick.
+      const src = el.opts?.src || '';
+      if (node.dataset.imgsrc === src) return;
+      node.dataset.imgsrc = src;
+      node.innerHTML = src ? `<img class="hud-img" src="${esc(src)}" alt="${esc(el.opts?.alt || '')}">` : '';
+    },
+  },
 };
 
 // list for the editor palette

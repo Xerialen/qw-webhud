@@ -72,6 +72,12 @@
 /* crosshair */
 .hel-crosshair { color: #2ecc40; opacity: 0.85; }
 
+/* image / icon — height tracks the element font-size; drop-shadow gives the same legible outline
+   the text elements get from text-shadow (text-shadow doesn't apply to <img>). */
+.hel-image { line-height: 0; }
+.hud-img { height: 1em; width: auto; display: block;
+  filter: drop-shadow(0 0 2px #000) drop-shadow(1px 1px 1px rgba(0,0,0,0.85)); }
+
 /* debug readout */
 .dbg {
   position: fixed; left: 6px; bottom: 6px; z-index: 9999;
