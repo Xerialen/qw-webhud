@@ -54,6 +54,7 @@ def main():
     ap.add_argument("--seed", type=int, default=12345)
     ap.add_argument("--ckpt", default="sd_xl_base_1.0.safetensors")
     ap.add_argument("--no-rembg", action="store_true", help="skip background removal")
+    ap.add_argument("--svg", action="store_true", help="also vectorize the PNG to <name>.svg (vtracer)")
     args = ap.parse_args()
 
     out = args.out or os.path.join(IMG_DIR, args.name + ".png")
@@ -94,6 +95,12 @@ def main():
         cut = remove(raw)
         with open(out, "wb") as f:
             f.write(cut)
+    if args.svg:
+        svg_path = os.path.splitext(out)[0] + ".svg"
+        import vtracer
+        vtracer.convert_image_to_svg_py(out, svg_path, colormode="color", filter_speckle=4)
+        print(f"[gen] SVG {svg_path} ({os.path.getsize(svg_path)//1024} KB)", flush=True)
+
     print(f"[gen] DONE {out} ({os.path.getsize(out)//1024} KB)", flush=True)
     print(out)
 
