@@ -2,7 +2,7 @@
   "mcpServers": {
     "comfyui": {
       "command": "npx",
-      "args": ["-y", "comfyui-mcp"],
+      "args": ["-y", "comfyui-mcp@0.16.0"],
       "env": {
         "COMFYUI_URL": "http://127.0.0.1:8188"
       }

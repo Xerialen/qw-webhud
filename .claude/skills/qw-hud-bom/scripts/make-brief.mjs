@@ -29,6 +29,7 @@ const HTTP_PORT = Number(process.env.HUD_HTTP_PORT || 7788);
 const UDP_PORT = Number(process.env.HUD_UDP_PORT || 27988);
 const CDP_PORT = 9445;
 const SPEC = String(process.argv[2] || 'demoshots').replace(/\.json$/, '');
+if (!/^[a-z0-9._-]+$/i.test(SPEC)) { console.error(`[qw-hud-bom] invalid spec name: ${SPEC}`); process.exit(1); }
 const OUT_DIR = process.argv[3] || path.join(REPO, 'briefs');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -80,8 +81,17 @@ async function capture(url, waitMs = 3800) {
     const ws = new WebSocket(pageWs);
     await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('cdp ws open failed')); });
     let id = 0; const pending = new Map();
-    ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
-    const cmd = (method, params = {}) => new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
+    const finish = (i, fn) => { const p = pending.get(i); if (p) { clearTimeout(p.to); pending.delete(i); fn(p); } };
+    const failAll = (err) => { for (const i of [...pending.keys()]) finish(i, (p) => p.rej(err)); };
+    ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id) finish(m.id, (p) => p.res(m)); };
+    ws.onclose = () => failAll(new Error('cdp ws closed'));
+    ws.onerror = () => failAll(new Error('cdp ws error'));
+    const cmd = (method, params = {}) => new Promise((res, rej) => {
+      const i = ++id;
+      const to = setTimeout(() => finish(i, (p) => p.rej(new Error('cdp timeout: ' + method))), 15000);
+      pending.set(i, { res, rej, to });
+      ws.send(JSON.stringify({ id: i, method, params }));
+    });
 
     await cmd('Page.enable');
     await cmd('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });

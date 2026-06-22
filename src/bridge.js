@@ -73,7 +73,8 @@ async function handleHttp(req, res) {
   let p = decodeURIComponent(u.pathname);
   if (p === '/' || p === '') p = '/overlay.html';
   const filePath = path.normalize(path.join(PUBLIC, p));
-  if (!filePath.startsWith(PUBLIC)) return send(res, 403, 'forbidden');
+  const relPath = path.relative(PUBLIC, filePath);
+  if (relPath.startsWith('..') || path.isAbsolute(relPath)) return send(res, 403, 'forbidden');
   try {
     const data = await fs.promises.readFile(filePath);
     send(res, 200, data, { 'content-type': MIME[path.extname(filePath)] || 'application/octet-stream',

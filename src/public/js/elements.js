@@ -161,8 +161,8 @@ export const ELEMENTS = {
         if (!line || /^\S+:\s/.test(line)) return null;                       // chat "para: lost..."
         let m = line.match(/^(.+?)\s+(?:was|were)\b.*?\bby\s+(.+?)[.!]?$/i);    // "VICTIM was ... by KILLER"
         if (m) return { killer: m[2].trim(), victim: m[1].trim() };
-        m = line.match(/^(\S+)\b.*?\b([^\s']+)'s\b/);                          // "KILLER ... VICTIM's weapon"
-        if (m && m[1] !== m[2]) return { killer: m[1].trim(), victim: m[2].trim() };
+        m = line.match(/^(\S+)\b.*?\b([^\s']+)'s\b/);                          // "VICTIM <verb> KILLER's weapon"
+        if (m && m[1] !== m[2]) return { killer: m[2].trim(), victim: m[1].trim() };
         return null;                                                          // suicide / unknown / noise
       };
       let kills = (state?.events?.messages || []).map(parseKill).filter(Boolean);

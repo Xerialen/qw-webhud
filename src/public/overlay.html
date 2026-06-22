@@ -23,7 +23,14 @@
     const params = new URLSearchParams(location.search);
     const bg = params.get('bg');
     if (bg === 'check') document.body.classList.add('check');
-    else if (bg) document.body.style.background = `#000 url("${bg}") center/cover no-repeat`;  // composite plate
+    // only a same-origin image asset path (prevents CSS-injection via the bg param)
+    else if (bg && /^\/[\w./-]+\.(png|jpe?g|webp|gif)$/i.test(bg)) {
+      document.body.style.backgroundColor = '#000';
+      document.body.style.backgroundImage = `url("${bg}")`;
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundRepeat = 'no-repeat';
+    }
 
     const stage = new Stage(document.getElementById('stage'));
     const feed = new Feed();

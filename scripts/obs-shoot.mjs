@@ -8,12 +8,12 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 
-const CFG = 'C:/Users/benya/AppData/Roaming/obs-studio/plugin_config/obs-websocket/config.json';
+const CFG = process.env.OBS_WS_CONFIG || ((process.env.APPDATA || '').replace(/\\/g, '/') + '/obs-studio/plugin_config/obs-websocket/config.json');
 const cfg = JSON.parse(fs.readFileSync(CFG, 'utf8'));
 const PORT = cfg.server_port || 4455;
 const PASS = cfg.server_password || '';
 const OVERLAY = process.env.OVERLAY_URL || 'http://localhost:7777/overlay.html?spec=demoshots';
-const OUT = process.argv[2] || 'C:/Users/benya/projects/quakeworld/qw-webhud/scripts/obs-composite.png';
+const OUT = process.argv[2] || 'obs-composite.png';   // cwd-relative default
 const W = 1920, H = 1080;
 
 const sha = (s) => crypto.createHash('sha256').update(s).digest('base64');

@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 const CHROME = process.env.CHROME || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const PORT = 9444;
 const URL = process.argv[2] || 'http://localhost:7777/overlay.html?spec=demoshots&bg=/_clean3d.jpg';
-const OUT = process.argv[3] || 'C:\\Users\\benya\\projects\\quakeworld\\qw-webhud\\scripts\\composite.png';
+const OUT = process.argv[3] || 'composite.png';   // cwd-relative default (machine-agnostic)
 const WAIT = Number(process.argv[4] || 3800);
 const UD = (process.env.TEMP || '.') + '\\qwcdp-' + process.pid;
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -34,8 +34,17 @@ try {
   const ws = new WebSocket(pageWs);
   await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('cdp ws open failed')); });
   let id = 0; const pending = new Map();
-  ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
-  const cmd = (method, params = {}) => new Promise(res => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
+  const finish = (i, fn) => { const p = pending.get(i); if (p) { clearTimeout(p.to); pending.delete(i); fn(p); } };
+  const failAll = (err) => { for (const i of [...pending.keys()]) finish(i, (p) => p.rej(err)); };
+  ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id) finish(m.id, (p) => p.res(m)); };
+  ws.onclose = () => failAll(new Error('cdp ws closed'));
+  ws.onerror = () => failAll(new Error('cdp ws error'));
+  const cmd = (method, params = {}) => new Promise((res, rej) => {
+    const i = ++id;
+    const to = setTimeout(() => finish(i, (p) => p.rej(new Error('cdp timeout: ' + method))), 15000);
+    pending.set(i, { res, rej, to });
+    ws.send(JSON.stringify({ id: i, method, params }));
+  });
 
   await cmd('Page.enable');
   await cmd('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
