@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "name": "milton-mc",
+    "baseW": 640, "baseH": 360,
+    "theme": "minecraft",
+    "notes": "Milton's player-POV HUD, Minecraft-skinned: generated MC icons (heart/armor/sword/potion) + live data-bound numbers, weapons hotbar, powerups, clock, tracking. Blocky pixel font via the minecraft theme."
+  },
+  "elements": [
+    { "id": "clock",   "type": "gameclock", "x": 50, "y": 7,  "anchor": "ct", "scale": 0.9, "z": 6 },
+    { "id": "pot",     "type": "image",     "x": 44, "y": 19, "anchor": "cc", "scale": 1.2, "z": 5, "opts": { "src": "/img/mc-potion.png", "alt": "powerup" } },
+    { "id": "pups",    "type": "powerups",  "x": 52, "y": 19, "anchor": "lc", "scale": 0.7, "z": 5 },
+    { "id": "trk",     "type": "tracking",  "x": 50, "y": 80, "anchor": "cb", "scale": 0.7, "z": 4 },
+    { "id": "armi",    "type": "image",     "x": 32, "y": 90, "anchor": "cc", "scale": 1.4, "z": 3, "opts": { "src": "/img/mc-armor.png", "alt": "armor" } },
+    { "id": "arm",     "type": "bigstat",   "x": 37, "y": 91, "anchor": "cc", "scale": 0.9, "z": 3, "opts": { "kind": "armor" } },
+    { "id": "hrti",    "type": "image",     "x": 46, "y": 90, "anchor": "cc", "scale": 1.4, "z": 3, "opts": { "src": "/img/mc-heart.png", "alt": "health" } },
+    { "id": "hp",      "type": "bigstat",   "x": 51, "y": 91, "anchor": "cc", "scale": 0.9, "z": 3, "opts": { "kind": "health" } },
+    { "id": "swdi",    "type": "image",     "x": 60, "y": 90, "anchor": "cc", "scale": 1.4, "z": 3, "opts": { "src": "/img/mc-sword.png", "alt": "ammo" } },
+    { "id": "am",      "type": "bigstat",   "x": 65, "y": 91, "anchor": "cc", "scale": 0.9, "z": 3, "opts": { "kind": "ammo" } },
+    { "id": "weps",    "type": "weapons",   "x": 50, "y": 99, "anchor": "cb", "scale": 0.8, "z": 2 }
+  ]
+}

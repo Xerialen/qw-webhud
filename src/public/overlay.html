@@ -37,6 +37,16 @@
     } catch {}
     stage.setSpec(spec);
 
+    // optional theme: spec.meta.theme === 'minecraft' -> blocky pixel font + pixelated icons (body.mc).
+    // The pixel webfont is loaded only for themed specs so the default HUD stays dependency-free.
+    if (spec.meta?.theme === 'minecraft') {
+      document.body.classList.add('mc');
+      const f = document.createElement('link');
+      f.rel = 'stylesheet';
+      f.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap';
+      document.head.appendChild(f);
+    }
+
     // initial render from the last snapshot, so a fresh load / headless screenshot shows data
     // immediately (before the first WebSocket frame arrives).
     try { const r0 = await fetch('/api/snapshot'); if (r0.ok) { const s0 = await r0.json(); if (s0 && s0.seq != null) stage.update(s0); } } catch {}

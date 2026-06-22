@@ -78,6 +78,16 @@
 .hud-img { height: 1em; width: auto; display: block;
   filter: drop-shadow(0 0 2px #000) drop-shadow(1px 1px 1px rgba(0,0,0,0.85)); }
 
+/* ---- Minecraft theme: body.mc (set by the overlay when spec.meta.theme === 'minecraft') ----
+   blocky pixel font + hard 1-px-style shadow + nearest-neighbour (pixelated) icon scaling. */
+body.mc .stage { font-family: "Press Start 2P", "Courier New", monospace; font-weight: 400; }
+body.mc .hel { letter-spacing: 0;
+  text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000; }
+body.mc .bs-val { letter-spacing: 0; }
+body.mc .hel-gameclock, body.mc .hel-teamscore, body.mc .hel-powerups { font-weight: 400; }
+body.mc .hud-img { image-rendering: pixelated;
+  filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.9)); }
+
 /* debug readout */
 .dbg {
   position: fixed; left: 6px; bottom: 6px; z-index: 9999;
