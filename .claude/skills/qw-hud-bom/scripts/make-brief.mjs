@@ -71,7 +71,7 @@ async function capture(url, waitMs = 3800) {
     for (let i = 0; i < 40 && !pageWs; i++) {
       await sleep(250);
       try {
-        const list = await fetch(`http://127.0.0.1:${CDP_PORT}/json`).then((r) => r.json());
+        const list = await fetch(`http://127.0.0.1:${CDP_PORT}/json`, { signal: AbortSignal.timeout(2000) }).then((r) => r.json());
         const page = list.find((t) => t.type === 'page');
         if (page) pageWs = page.webSocketDebuggerUrl;
       } catch {}
@@ -79,7 +79,11 @@ async function capture(url, waitMs = 3800) {
     if (!pageWs) throw new Error('chrome devtools not reachable');
 
     const ws = new WebSocket(pageWs);
-    await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('cdp ws open failed')); });
+    await new Promise((res, rej) => {
+      const t = setTimeout(() => rej(new Error('cdp ws open timeout')), 10000);
+      ws.onopen = () => { clearTimeout(t); res(); };
+      ws.onerror = () => { clearTimeout(t); rej(new Error('cdp ws open failed')); };
+    });
     let id = 0; const pending = new Map();
     const finish = (i, fn) => { const p = pending.get(i); if (p) { clearTimeout(p.to); pending.delete(i); fn(p); } };
     const failAll = (err) => { for (const i of [...pending.keys()]) finish(i, (p) => p.rej(err)); };
@@ -258,7 +262,8 @@ async function main() {
     const outZip = path.join(OUT_DIR, `qw-hud-bom-${SPEC}.zip`);
     fs.rmSync(outZip, { force: true });
     const z = spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command',
-      `Compress-Archive -Path "${stage}\\*" -DestinationPath "${outZip}" -Force`], { stdio: 'ignore' });
+      "Compress-Archive -Path (Join-Path $env:QWZ_SRC '*') -DestinationPath $env:QWZ_OUT -Force"],
+      { stdio: 'ignore', env: { ...process.env, QWZ_SRC: stage, QWZ_OUT: outZip } });   // paths via env, not the command string -> no injection
     fs.rmSync(stage, { recursive: true, force: true });
     if (z.status !== 0) throw new Error('Compress-Archive failed (exit ' + z.status + ')');
 

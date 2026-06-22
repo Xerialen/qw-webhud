@@ -24,7 +24,7 @@
     const bg = params.get('bg');
     if (bg === 'check') document.body.classList.add('check');
     // only a same-origin image asset path (prevents CSS-injection via the bg param)
-    else if (bg && /^\/[\w./-]+\.(png|jpe?g|webp|gif)$/i.test(bg)) {
+    else if (bg && /^\/(?!\/)[\w./-]+\.(png|jpe?g|webp|gif)$/i.test(bg)) {   // single leading slash (same-origin; reject //host)
       document.body.style.backgroundColor = '#000';
       document.body.style.backgroundImage = `url("${bg}")`;
       document.body.style.backgroundPosition = 'center';

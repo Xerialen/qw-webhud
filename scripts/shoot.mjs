@@ -24,7 +24,7 @@ try {
   for (let i = 0; i < 40 && !pageWs; i++) {
     await sleep(250);
     try {
-      const list = await fetch(`http://127.0.0.1:${PORT}/json`).then(r => r.json());
+      const list = await fetch(`http://127.0.0.1:${PORT}/json`, { signal: AbortSignal.timeout(2000) }).then(r => r.json());
       const page = list.find(t => t.type === 'page');
       if (page) pageWs = page.webSocketDebuggerUrl;
     } catch {}
@@ -32,7 +32,11 @@ try {
   if (!pageWs) throw new Error('chrome devtools not reachable');
 
   const ws = new WebSocket(pageWs);
-  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('cdp ws open failed')); });
+  await new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error('cdp ws open timeout')), 10000);
+    ws.onopen = () => { clearTimeout(t); res(); };
+    ws.onerror = () => { clearTimeout(t); rej(new Error('cdp ws open failed')); };
+  });
   let id = 0; const pending = new Map();
   const finish = (i, fn) => { const p = pending.get(i); if (p) { clearTimeout(p.to); pending.delete(i); fn(p); } };
   const failAll = (err) => { for (const i of [...pending.keys()]) finish(i, (p) => p.rej(err)); };
