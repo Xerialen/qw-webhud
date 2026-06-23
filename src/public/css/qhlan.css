@@ -1,0 +1,255 @@
+/* =====================================================================
+   qw-webhud · QHLAN theme  (spec.meta.theme === "qhlan")
+   Ported verbatim from the Claude Design handoff bundle
+   (QHLAN design system-handoff.zip: qhlan.css tokens + hud.css components).
+   Everything is scoped under body.qhlan so it only applies to qhlan specs
+   and never bleeds into the editor chrome or the default HUD.
+
+   Renders on the Stage's FIXED-1080 mode (render.js): an inner 1920x1080
+   .hud-stage scaled by transform:scale(clientH/1080), so the fixed-px sizes
+   below are resolution-independent. Colour stays bound to QW's fixed
+   semantics (health white/gold/red, armor green/gold/red by type, per-pool
+   ammo colours, powerup colours, team palette colour via --tc); the
+   brand-green accent (--green*) tints chrome only.
+   ===================================================================== */
+
+/* ---------- DESIGN TOKENS (from qhlan.css :root) ------------------- */
+body.qhlan {
+  /* surfaces */
+  --bg-2:#080d09; --panel:#172017; --panel-2:#1d281c;
+  --line:#2a3826; --line-2:#39492f; --line-3:#485c3a;
+  /* text */
+  --t1:#e9efe2; --t2:#a3b59a; --t3:#6f8265; --t4:#4c5a45;
+  /* quake-green accent (chrome only) */
+  --green:#6cc24a; --green-bright:#8fe05f; --green-dim:#4f9233;
+  --green-d:#1d3314; --green-glow:rgba(108,194,74,.35);
+  /* tier / pool accents */
+  --gold:#e8c33a; --orange:#ec7d24; --blue:#3fa0d6; --red:#e0533a; --twitch:#9147ff;
+  /* armor tiers */
+  --armor-green:#6cc24a; --armor-yellow:#e8c33a; --armor-red:#e0533a;
+  /* type */
+  --font-display:'Saira Condensed','Oswald',system-ui,sans-serif;
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  /* radii */
+  --r-xs:4px; --r-sm:6px; --r:10px; --r-lg:14px; --r-xl:20px; --r-pill:999px;
+  --shadow-card:0 2px 8px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.2);
+
+  /* per-pool ammo colours */
+  --pool-shells:var(--gold); --pool-nails:var(--blue);
+  --pool-rockets:var(--orange); --pool-cells:var(--twitch);
+  /* powerup colours */
+  --pu-quad:var(--blue); --pu-pent:var(--red); --pu-ring:var(--gold); --pu-suit:var(--armor-green);
+  /* killfeed sides */
+  --mate:#6cc24a; --enemy:#e0533a;
+  /* over-video legibility */
+  --hud-glow:0 2px 7px rgba(0,0,0,.9), 0 0 2px rgba(0,0,0,.95);
+  --hud-glow-soft:0 2px 5px rgba(0,0,0,.7);
+  /* tweakables (chrome) */
+  --hud-shell-a:.60; --hud-scale:1;
+  /* armor shield glyph */
+  --armor-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 1 22 5v9c0 7-5 11-10 13C7 24 2 20 2 14V5z'/%3E%3C/svg%3E");
+}
+
+/* ===================== STAGE ======================================= */
+/* The Stage (render.js fixed-1080 mode) sets position/left/top/transform on
+   this node inline; here we only give it the design size + base look. */
+body.qhlan .hud-stage{
+  width:1920px; height:1080px; overflow:hidden;
+  font-family:var(--font-ui); color:var(--t1);
+  background:transparent; isolation:isolate; user-select:none;
+}
+/* element wrapper — positioned by the Stage (left/top/transform inline) */
+body.qhlan .hud-el{ position:absolute; }
+
+/* armor shield glyph */
+body.qhlan .armor{
+  --c:var(--armor-green);
+  width:14px; height:16px; flex:none; display:inline-block; background:var(--c);
+  -webkit-mask:var(--armor-mask) center/contain no-repeat;
+  mask:var(--armor-mask) center/contain no-repeat;
+}
+body.qhlan .armor--green{ --c:var(--armor-green); }
+body.qhlan .armor--yellow{ --c:var(--armor-yellow); }
+body.qhlan .armor--red{ --c:var(--armor-red); }
+
+/* ===================== GLASS PANEL ================================= */
+body.qhlan .hp{
+  position:relative;
+  background:rgba(13,19,13,var(--hud-shell-a));
+  -webkit-backdrop-filter:blur(9px) saturate(125%);
+  backdrop-filter:blur(9px) saturate(125%);
+  border:1px solid rgba(150,190,130,.20);
+  border-radius:var(--r-lg);
+  box-shadow:0 6px 22px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+}
+body.qhlan .hp--bare{ background:none; backdrop-filter:none; -webkit-backdrop-filter:none; border:0; box-shadow:none; }
+body.qhlan .hp--bar{ border-radius:var(--r-xl); }
+
+/* shared value colour classes */
+body.qhlan .v-white{ color:var(--t1); }
+body.qhlan .v-warn{ color:var(--gold); }
+body.qhlan .v-crit{ color:var(--red); }
+body.qhlan .a-green{ color:var(--armor-green); }
+body.qhlan .a-yellow{ color:var(--armor-yellow); }
+body.qhlan .a-red{ color:var(--armor-red); }
+
+/* ===================== BIG STAT (health / armor / ammo) ============ */
+body.qhlan .bigstat{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:14px 26px 12px; min-width:150px;
+}
+body.qhlan .bigstat__num{
+  font-family:var(--font-display); font-weight:900; line-height:.8;
+  font-size:88px; letter-spacing:-.01em; font-variant-numeric:tabular-nums;
+  text-shadow:var(--hud-glow);
+}
+body.qhlan .bigstat__lbl{
+  display:flex; align-items:center; gap:6px;
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase;
+  letter-spacing:.16em; font-size:15px; color:var(--t3); text-shadow:var(--hud-glow-soft);
+}
+body.qhlan .bigstat__lbl b{ color:var(--t2); font-weight:700; }
+body.qhlan .bigstat .armor{ width:16px; height:18px; }
+body.qhlan .hud-stage[data-fx="1"] .bigstat--health.is-crit .bigstat__num{ animation:qhlanHpCrit 1s ease-in-out infinite; }
+@keyframes qhlanHpCrit{ 0%,100%{ text-shadow:var(--hud-glow); } 50%{ text-shadow:var(--hud-glow), 0 0 26px rgba(224,83,58,.9); opacity:.82; } }
+
+/* ===================== WEAPONS STRIP =============================== */
+body.qhlan .weps{ display:flex; align-items:stretch; gap:6px; padding:8px;
+  background:rgba(10,15,10,calc(var(--hud-shell-a) * .9));
+  -webkit-backdrop-filter:blur(9px); backdrop-filter:blur(9px);
+  border:1px solid rgba(150,190,130,.16); border-radius:var(--r-lg); }
+body.qhlan .wep{
+  font-family:var(--font-display); font-weight:800; text-transform:uppercase;
+  letter-spacing:.03em; font-size:23px; line-height:1;
+  padding:9px 12px 7px; border-radius:var(--r-sm); min-width:46px; text-align:center;
+  border:1px solid transparent; transition:.12s; white-space:nowrap;
+}
+body.qhlan .wep.is-own{ color:var(--t1); background:rgba(255,255,255,.05); border-color:rgba(180,210,160,.16); text-shadow:var(--hud-glow-soft); }
+body.qhlan .wep.is-missing{ color:var(--t4); background:transparent; border:1px dashed var(--line-2); }
+body.qhlan .wep.is-active{
+  color:#06210a; background:var(--green); border-color:var(--green-bright);
+  box-shadow:0 0 20px var(--green-glow); text-shadow:none;
+}
+body.qhlan .wep__ammo{ display:block; font-size:11px; font-weight:700; letter-spacing:.04em; margin-top:3px; opacity:.85; }
+
+/* ===================== AMMO POOLS ================================= */
+body.qhlan .pools{ display:flex; gap:8px; padding:8px;
+  background:rgba(10,15,10,calc(var(--hud-shell-a) * .82));
+  -webkit-backdrop-filter:blur(9px); backdrop-filter:blur(9px);
+  border:1px solid rgba(150,190,130,.14); border-radius:var(--r-lg); }
+body.qhlan .pools--col{ flex-direction:column; }
+body.qhlan .pools--grid{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+body.qhlan .pool{
+  --pc:var(--t2);
+  display:flex; align-items:center; gap:8px;
+  padding:6px 11px 6px 8px; border-radius:var(--r-sm);
+  background:rgba(255,255,255,.035); border:1px solid transparent;
+}
+body.qhlan .pool__pip{ width:5px; align-self:stretch; min-height:18px; border-radius:3px; background:var(--pc); box-shadow:0 0 8px color-mix(in oklab,var(--pc) 60%,transparent); }
+body.qhlan .pool__v{ font-family:var(--font-display); font-weight:800; font-size:27px; line-height:1; color:var(--pc); font-variant-numeric:tabular-nums; text-shadow:var(--hud-glow-soft); }
+body.qhlan .pool__k{ font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--t4); }
+body.qhlan .pool--shells{ --pc:var(--pool-shells); }
+body.qhlan .pool--nails{ --pc:var(--pool-nails); }
+body.qhlan .pool--rockets{ --pc:var(--pool-rockets); }
+body.qhlan .pool--cells{ --pc:var(--pool-cells); }
+body.qhlan .pool.is-active{ background:color-mix(in oklab,var(--pc) 16%,transparent); border-color:color-mix(in oklab,var(--pc) 55%,transparent); }
+body.qhlan .pool.is-active .pool__k{ color:var(--pc); opacity:.8; }
+
+/* ===================== POWERUPS =================================== */
+body.qhlan .pups{ display:flex; gap:10px; }
+body.qhlan .pup{
+  --pc:var(--green); white-space:nowrap;
+  display:inline-flex; align-items:center; gap:11px;
+  padding:7px 14px 6px; border-radius:var(--r-pill);
+  background:color-mix(in oklab,var(--pc) 20%,rgba(8,12,8,.66));
+  border:1px solid color-mix(in oklab,var(--pc) 70%,transparent);
+  box-shadow:0 0 22px color-mix(in oklab,var(--pc) 30%,transparent);
+}
+body.qhlan .pup__k{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; letter-spacing:.08em; font-size:20px; color:var(--pc); white-space:nowrap; }
+body.qhlan .pup__t{ font-family:var(--font-display); font-weight:900; font-size:28px; line-height:1; color:#fff; font-variant-numeric:tabular-nums; min-width:2ch; text-align:center; text-shadow:var(--hud-glow); }
+body.qhlan .pup--quad{ --pc:var(--pu-quad); } body.qhlan .pup--pent{ --pc:var(--pu-pent); }
+body.qhlan .pup--ring{ --pc:var(--pu-ring); } body.qhlan .pup--suit{ --pc:var(--pu-suit); }
+body.qhlan .hud-stage[data-fx="1"] .pup.is-low{ animation:qhlanPuLow .7s steps(2,end) infinite; }
+@keyframes qhlanPuLow{ 50%{ box-shadow:0 0 30px color-mix(in oklab,var(--pc) 65%,transparent); border-color:#fff; } }
+
+/* ===================== TEAM SCORE ================================= */
+body.qhlan .score{ display:flex; align-items:center; gap:16px; padding:10px 18px; }
+body.qhlan .score__team{ display:flex; align-items:center; gap:9px; }
+body.qhlan .score__sq{ width:18px; height:18px; border-radius:5px; background:var(--tc); box-shadow:0 0 12px color-mix(in oklab,var(--tc) 55%,transparent); flex:none; }
+body.qhlan .score__tag{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; letter-spacing:.03em; font-size:24px; color:var(--tc); text-shadow:var(--hud-glow); white-space:nowrap; }
+body.qhlan .score__f{ font-family:var(--font-display); font-weight:900; font-size:50px; line-height:.8; color:var(--t1); font-variant-numeric:tabular-nums; text-shadow:var(--hud-glow); }
+body.qhlan .score__f.is-lead{ color:#fff; }
+body.qhlan .score__sep{ font-family:var(--font-display); font-weight:700; font-size:30px; color:var(--t4); }
+body.qhlan .score__clock{ margin-left:6px; padding-left:16px; border-left:1px solid var(--line-2);
+  font-family:var(--font-display); font-weight:800; font-size:30px; color:var(--t2); font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+
+/* ===================== GAME CLOCK ================================= */
+body.qhlan .clock{ display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 20px 6px; }
+body.qhlan .clock__t{ font-family:var(--font-display); font-weight:800; font-size:40px; line-height:.9; color:var(--t1); font-variant-numeric:tabular-nums; letter-spacing:.02em; text-shadow:var(--hud-glow); }
+body.qhlan .clock__k{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:12px; color:var(--t3); }
+body.qhlan .clock__k b{ color:var(--green); }
+
+/* ===================== TEAM INFO ================================= */
+body.qhlan .tinfo{ padding:11px 14px 12px; min-width:330px; }
+body.qhlan .tinfo__hd{ display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:13px; color:var(--t3); }
+body.qhlan .tinfo__hd b{ color:var(--green); }
+body.qhlan .tinfo__row{ display:grid; grid-template-columns:42px 1fr auto auto 44px; align-items:center; gap:11px; padding:5px 0; border-top:1px solid var(--line); }
+body.qhlan .tinfo__row:first-of-type{ border-top:0; }
+body.qhlan .tinfo__loc{ font-family:var(--font-mono); font-size:13px; text-transform:uppercase; color:var(--green); letter-spacing:.04em; }
+body.qhlan .tinfo__name{ font-family:var(--font-ui); font-weight:700; font-size:20px; color:var(--t1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+body.qhlan .tinfo__hp{ font-family:var(--font-display); font-weight:800; font-size:22px; font-variant-numeric:tabular-nums; text-align:right; min-width:2.6ch; }
+body.qhlan .tinfo__ar{ display:inline-flex; align-items:center; gap:5px; justify-content:flex-end; font-family:var(--font-display); font-weight:800; font-size:22px; font-variant-numeric:tabular-nums; min-width:3.4ch; }
+body.qhlan .tinfo__ar .armor{ width:13px; height:15px; }
+body.qhlan .tinfo__wep{ font-family:var(--font-display); font-weight:800; font-size:17px; text-transform:uppercase; color:var(--t2); text-align:right; letter-spacing:.02em; }
+body.qhlan .tinfo__row.is-self .tinfo__name{ color:var(--green); }
+body.qhlan .tinfo__row.is-stale{ opacity:.42; }
+
+/* ===================== KILL FEED ================================= */
+body.qhlan .kfeed{ display:flex; flex-direction:column; gap:5px; align-items:flex-end; }
+body.qhlan .kf{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:5px 11px; border-radius:var(--r-sm);
+  background:rgba(9,13,9,calc(var(--hud-shell-a) * .82));
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  border:1px solid rgba(150,190,130,.12);
+  font-size:21px; line-height:1; white-space:nowrap;
+}
+body.qhlan .kf__k,body.qhlan .kf__v{ font-family:var(--font-display); font-weight:800; letter-spacing:.01em; text-shadow:var(--hud-glow-soft); }
+body.qhlan .kf__k.is-mate,body.qhlan .kf__v.is-mate{ color:var(--mate); }
+body.qhlan .kf__k.is-enemy,body.qhlan .kf__v.is-enemy{ color:var(--enemy); }
+body.qhlan .kf__w{ font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--t3);
+  padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.05); }
+body.qhlan .kf__sep{ color:var(--t4); font-weight:700; }
+body.qhlan .kf.is-fresh{ animation:qhlanKfIn .32s cubic-bezier(.3,1.2,.5,1) both; }
+@keyframes qhlanKfIn{ from{ opacity:0; transform:translateX(14px); } to{ opacity:1; transform:none; } }
+
+/* ===================== TRACKING (POV) ============================ */
+body.qhlan .track{ display:inline-flex; align-items:center; gap:11px; padding:7px 17px 6px; white-space:nowrap; }
+body.qhlan .track__ar{ color:var(--green); font-size:18px; filter:drop-shadow(0 0 6px var(--green-glow)); }
+body.qhlan .track__name{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-size:26px; color:var(--t1); text-shadow:var(--hud-glow); white-space:nowrap; }
+body.qhlan .track__k{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:12px; color:var(--t3); padding-left:11px; border-left:1px solid var(--line-2); }
+
+/* ===================== SPEED ===================================== */
+body.qhlan .speed{ display:inline-flex; align-items:baseline; gap:7px; padding:6px 14px; }
+body.qhlan .speed__v{ font-family:var(--font-display); font-weight:900; font-size:34px; line-height:.9; color:var(--t1); font-variant-numeric:tabular-nums; text-shadow:var(--hud-glow); transition:color .2s; }
+body.qhlan .speed.is-fast .speed__v{ color:var(--green); }
+body.qhlan .speed__u{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:13px; color:var(--t3); }
+
+/* ===================== CENTER PRINT ============================== */
+body.qhlan .cprint{
+  font-family:var(--font-display); font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+  font-size:52px; line-height:1; color:var(--t1); text-align:center; text-shadow:var(--hud-glow);
+  padding:6px 22px; animation:qhlanCpIn .4s ease both;
+}
+body.qhlan .cprint b{ color:var(--green); }
+body.qhlan .cprint--quad{ color:var(--pu-quad); }
+@keyframes qhlanCpIn{ from{ opacity:0; transform:translateY(-8px) scale(.96); } to{ opacity:1; transform:none; } }
+
+@media (prefers-reduced-motion:reduce){
+  body.qhlan .hud-stage[data-fx="1"] .bigstat--health.is-crit .bigstat__num,
+  body.qhlan .hud-stage[data-fx="1"] .pup.is-low,
+  body.qhlan .kf.is-fresh,
+  body.qhlan .cprint{ animation:none; }
+}

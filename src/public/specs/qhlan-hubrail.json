@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "name": "qhlan-hubrail",
+    "theme": "qhlan",
+    "baseW": 640,
+    "baseH": 360,
+    "notes": "QHLAN edition — Hub Rail. The canonical hub.quakeworld.nu demoshot arrangement re-chromed in QHLAN glass. Score + clock top-centre, kill feed and team panel on the right rail, a centred bottom vitals cluster (armor/health/ammo) over the weapon strip, ammo pools bottom-right, speed bottom-left. Transparent overlay; colours stay bound to data (see README). The brand-green accent tints chrome only."
+  },
+  "elements": [
+    { "id": "score",       "type": "teamscore",   "x": 50, "y": 5.5, "anchor": "ct", "scale": 1,    "z": 6 },
+    { "id": "clock",       "type": "gameclock",   "x": 50, "y": 13,  "anchor": "ct", "scale": 1,    "z": 6 },
+    { "id": "killfeed",    "type": "killfeed",    "x": 98, "y": 7.5, "anchor": "rt", "scale": 1,    "z": 5, "opts": { "align": "right", "keep": 5 } },
+    { "id": "teaminfo",    "type": "teaminfo",    "x": 98, "y": 39,  "anchor": "rt", "scale": 1,    "z": 5, "opts": { "align": "right" } },
+    { "id": "centerprint", "type": "centerprint", "x": 50, "y": 35,  "anchor": "cc", "scale": 1,    "z": 8 },
+    { "id": "powerups",    "type": "powerups",    "x": 50, "y": 68,  "anchor": "cc", "scale": 1,    "z": 4 },
+    { "id": "tracking",    "type": "tracking",    "x": 50, "y": 76,  "anchor": "cc", "scale": 1,    "z": 4 },
+    { "id": "armor",       "type": "bigstat",     "x": 38, "y": 91,  "anchor": "cb", "scale": 1,    "z": 5, "opts": { "kind": "armor" } },
+    { "id": "health",      "type": "bigstat",     "x": 50, "y": 91,  "anchor": "cb", "scale": 1.06, "z": 5, "opts": { "kind": "health" } },
+    { "id": "ammo",        "type": "bigstat",     "x": 62, "y": 91,  "anchor": "cb", "scale": 1,    "z": 5, "opts": { "kind": "ammo" } },
+    { "id": "weapons",     "type": "weapons",     "x": 50, "y": 99,  "anchor": "cb", "scale": 1,    "z": 4 },
+    { "id": "ammocounts",  "type": "ammocounts",  "x": 98, "y": 96,  "anchor": "rb", "scale": 1,    "z": 4, "opts": { "dir": "row" } },
+    { "id": "speed",       "type": "speed",       "x": 2,  "y": 97,  "anchor": "lb", "scale": 1,    "z": 4 }
+  ]
+}

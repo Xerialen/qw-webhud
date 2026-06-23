@@ -31,6 +31,8 @@ sits at `alwaysOnTop('screen-saver')`, and is click-through (`setIgnoreMouseEven
 # 1) start the overlay (primary display, demoshots spec by default)
 npm start
 #    overrides:  $env:OVERLAY_URL="http://localhost:7777/overlay.html?spec=hub"; $env:QW_DISPLAY=1; npm start
+#    QHLAN redesign:  $env:OVERLAY_URL="http://localhost:7777/overlay.html?spec=qhlan-hubrail"; npm start
+#                     (also qhlan-lowerthird / qhlan-cockpit)
 
 # 2) launch ezQuake windowed-borderless, native HUD off, playing a 4on4 MVD
 ./play-quake.ps1                       # defaults: book_vs dm3, seek 60s, port 27999

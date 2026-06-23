@@ -43,12 +43,12 @@ button.danger { background: #6f2f33; border-color: #8a3a40; }
     linear-gradient(90deg, rgba(0,255,255,0.12) 1px, transparent 1px);
   background-size: 10% 10%, 10% 10%; }
 
-/* editor makes HUD elements interactive */
-.editor .stage .hel { pointer-events: auto; cursor: grab; }
-.editor .stage .hel.sel { outline: 1px dashed #6cf; outline-offset: 2px; }
-.editor .stage .hel.sel::before { content: attr(data-id); position: absolute; left: 0; top: -1.4em;
+/* editor makes HUD elements interactive (.hel = default specs, .hud-el = themed fixed-1080 specs) */
+.editor .stage .hel, .editor .stage .hud-el { pointer-events: auto; cursor: grab; }
+.editor .stage .hel.sel, .editor .stage .hud-el.sel { outline: 1px dashed #6cf; outline-offset: 2px; }
+.editor .stage .hel.sel::before, .editor .stage .hud-el.sel::before { content: attr(data-id); position: absolute; left: 0; top: -1.4em;
   font: 10px/1 ui-monospace, monospace; color: #6cf; background: rgba(0,0,0,0.7); padding: 1px 4px; border-radius: 3px; white-space: nowrap; }
-.editor .stage .hel.dragging { cursor: grabbing; opacity: 0.85; }
+.editor .stage .hel.dragging, .editor .stage .hud-el.dragging { cursor: grabbing; opacity: 0.85; }
 
 #props { width: 260px; background: #1c2026; border-left: 1px solid #2c323b; padding: 10px; overflow-y: auto; }
 #props h3 { margin: 0 0 8px; font-size: 13px; color: #cfd5dd; }

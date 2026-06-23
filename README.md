@@ -53,6 +53,20 @@ with `cl_hudexport`, and set `cl_hudexport 1` in-game (port via `cl_hudexport_po
   browser window (e.g. a dedicated Chrome `--app` window) over it. A packaged transparent overlay
   window is a planned convenience (see the roadmap).
 
+## Themes
+
+A spec may set `meta.theme` to restyle the HUD. A theme is `body.<cls>` CSS + an optional webfont +
+(for richer themes) its own element catalog, applied by `js/theme.js` for both the overlay and the
+editor. Built-in themes:
+
+- **minecraft** / **bladerunner** — CSS reskins of the default elements (`milton-mc`, `milton-br`).
+- **qhlan** — the full QHLAN redesign (glass panels, condensed display type, brand-green accent).
+  Three drop-in layouts — `specs/qhlan-hubrail.json`, `qhlan-lowerthird.json`, `qhlan-cockpit.json`
+  (from a Claude Design handoff built off the `qw-hud-bom` export). It uses its own element catalog
+  (`js/qhlan-elements.js`) on a fixed 1920×1080 stage scaled as a whole, so view it with e.g.
+  `overlay.html?spec=qhlan-hubrail`. Colour stays bound to QW's data semantics; the accent tints
+  chrome only.
+
 ## Layout
 
 ```
@@ -69,10 +83,15 @@ src/
       qw-constants.js  QW item/weapon bitmask constants + derivations (shared by web + mock)
       feed.js          WebSocket client (keeps latest snapshot, fps/age meters)
       render.js        the Stage: positions elements in %-space, scales to the window
-      elements.js      the element catalog (health/armor/ammo/score/teaminfo/...)
+                       (+ a fixed-1080 mode for themed specs that need pixel layout)
+      elements.js      the default element catalog (health/armor/ammo/score/teaminfo/...)
+      qhlan-elements.js the QHLAN-theme element catalog (glass renderers, fixed-1080 layout)
+      theme.js         per-spec theming (body class + webfont + theme CSS), shared overlay+editor
       specs.js         the built-in "hub" preset + a frozen sample state for the editor
       editor.js        drag / select / properties / save-load / background / live-preview
+    css/qhlan.css      QHLAN theme styling (scoped under body.qhlan)
     specs/hub.json     the default saved HUD-spec
+    specs/qhlan-*.json QHLAN-themed layouts: hubrail / lowerthird / cockpit
 scripts/wscheck.mjs    WebSocket smoke test
 ```
 

@@ -36,6 +36,7 @@ export const SAMPLE_STATE = {
     ammo: { shells: 25, nails: 0, rockets: 8, cells: 40 },
     weapon: makeItems(['rl']), weapon_ammo: 8,
     items: makeItems(['axe', 'sg', 'ssg', 'ng', 'rl', 'lg'], { armor: 2, quad: true }),
+    powerup_timers: { quad: 18, pent: 0, ring: 0, suit: 0 },
     frags: 17, deaths: 9, ping: 25, speed: 320,
   },
   match: { map: 'dm3', gametime: 496, timelimit: 1200, standby: false, countdown: false },
@@ -46,6 +47,14 @@ export const SAMPLE_STATE = {
     { slot: 3, name: 'draqz',  loc: 'ya',   health: 47,  armor: 60,  armortype: 1, weapon: makeItems(['ssg']), ammo: 3 },
   ],
   events: {
+    // raw QW obituary lines (what the engine ships + the killfeed elements parse). The structured
+    // killfeed[] below is kept for any consumer that wants it pre-parsed.
+    messages: [
+      'mix was railed by X-ray',
+      'low was zapped by sail',
+      'volkov was melted by milton',
+      'draqz was gibbed by lakso',
+    ],
     killfeed: [
       { t: 0, killer: 'X-ray', victim: 'mix', weapon: 'rl' },
       { t: 0, killer: 'sail', victim: 'low', weapon: 'lg' },

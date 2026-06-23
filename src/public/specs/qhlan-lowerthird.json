@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "name": "qhlan-lowerthird",
+    "theme": "qhlan",
+    "baseW": 640,
+    "baseH": 360,
+    "notes": "QHLAN edition — Lower Third (broadcast bars). One scorebug (score + clock) top-centre; the whole tracked-player status consolidated onto a single glass lower-third bar: POV name, armor/health/ammo, weapons over pools, powerup timers at the right end. Team panel + kill feed stay on the right rail. The 'panel' element is a QHLAN-glass backing (catalog extension); every stat on top still binds to its own live field."
+  },
+  "elements": [
+    { "id": "score",       "type": "teamscore",   "x": 50,  "y": 4,    "anchor": "ct", "scale": 1,    "z": 7, "opts": { "withClock": true } },
+    { "id": "killfeed",    "type": "killfeed",    "x": 98,  "y": 8,    "anchor": "rt", "scale": 1,    "z": 6, "opts": { "align": "right", "keep": 5 } },
+    { "id": "teaminfo",    "type": "teaminfo",    "x": 98,  "y": 41,   "anchor": "rt", "scale": 1,    "z": 6, "opts": { "align": "right" } },
+    { "id": "centerprint", "type": "centerprint", "x": 50,  "y": 42,   "anchor": "cc", "scale": 1,    "z": 8 },
+    { "id": "bar",         "type": "panel",       "x": 50,  "y": 99,   "anchor": "cb", "scale": 1,    "z": 2, "opts": { "w": 1664, "h": 140, "variant": "bar" } },
+    { "id": "tracking",    "type": "tracking",    "x": 6.5, "y": 92.5, "anchor": "lc", "scale": 1,    "z": 4 },
+    { "id": "armor",       "type": "bigstat",     "x": 26,  "y": 92.5, "anchor": "cc", "scale": 0.8,  "z": 4, "opts": { "kind": "armor" } },
+    { "id": "health",      "type": "bigstat",     "x": 35,  "y": 92.5, "anchor": "cc", "scale": 0.86, "z": 4, "opts": { "kind": "health" } },
+    { "id": "ammo",        "type": "bigstat",     "x": 44,  "y": 92.5, "anchor": "cc", "scale": 0.8,  "z": 4, "opts": { "kind": "ammo" } },
+    { "id": "weapons",     "type": "weapons",     "x": 63,  "y": 89.5, "anchor": "cc", "scale": 0.82, "z": 4 },
+    { "id": "ammocounts",  "type": "ammocounts",  "x": 63,  "y": 96,   "anchor": "cc", "scale": 0.82, "z": 4, "opts": { "dir": "row" } },
+    { "id": "powerups",    "type": "powerups",    "x": 88,  "y": 92.5, "anchor": "rc", "scale": 1,    "z": 4 }
+  ]
+}
