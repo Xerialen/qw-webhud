@@ -55,12 +55,13 @@ mvd_autotrack 1
 demo_autotrack 1
 con_fragmessages 1
 con_notify 0
+_con_notifylines 0
 con_notifytime 30
 demo_jump_skip_messages 0
 cl_demospeed 1
 demo_setspeed 100
 alias f_demoend "echo F_DEMOEND_LOOP; playdemo demos/overlay_src.mvd"
-alias do_go "unalias f_spawn; mvd_autotrack 1; demo_jump $Seek"
+alias do_go "unalias f_spawn; mvd_autotrack 1; demo_jump $Seek; toggleconsole"
 alias f_spawn do_go
 playdemo demos/overlay_src.mvd
 "@
