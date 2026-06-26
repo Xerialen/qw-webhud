@@ -7,6 +7,7 @@
 //   node obs-shoot.mjs [outPath]
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import { wsConnect } from '../src/ws-lite.js';
 
 const CFG = process.env.OBS_WS_CONFIG || ((process.env.APPDATA || '').replace(/\\/g, '/') + '/obs-studio/plugin_config/obs-websocket/config.json');
 const cfg = JSON.parse(fs.readFileSync(CFG, 'utf8'));
@@ -26,7 +27,7 @@ function req(requestType, requestData = {}) {
 }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
+ws = wsConnect(`ws://127.0.0.1:${PORT}`);
 ws.onerror = (e) => { console.error('WS error:', e.message || 'connect failed (is OBS running with websocket enabled?)'); process.exit(2); };
 ws.onclose = () => {};
 ws.onmessage = async (ev) => {

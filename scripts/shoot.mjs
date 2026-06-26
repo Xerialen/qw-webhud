@@ -1,22 +1,27 @@
 // shoot.mjs -- reliable full-res screenshot of a URL via Chrome DevTools Protocol (zero deps; Node's
-// global fetch + WebSocket). Avoids the flaky `chrome --screenshot` flag (profile collisions +
-// virtual-time-budget vs the page's open WebSocket). Usage: node shoot.mjs [url] [outPng] [waitMs] [width] [height]
+// global fetch + a vendored RFC 6455 client, so it runs on Node 18 + Windows/Linux/macOS). Avoids the
+// flaky `chrome --screenshot` flag (profile collisions + virtual-time-budget vs the page's open
+// WebSocket). Usage: node shoot.mjs [url] [outPng] [waitMs] [width] [height]
 // width/height default to 1920x1080; pass e.g. 2560 1440 to validate layout at a non-unit stage scale.
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
+import { wsConnect } from '../src/ws-lite.js';
+import { resolveChrome, profileDir } from './_chrome.mjs';
 
-const CHROME = process.env.CHROME || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const CHROME = resolveChrome();
 const PORT = 9444;
 const URL = process.argv[2] || 'http://localhost:7777/overlay.html?spec=demoshots&bg=/_clean3d.jpg';
 const OUT = process.argv[3] || 'composite.png';   // cwd-relative default (machine-agnostic)
 const WAIT = Number(process.argv[4] || 3800);
 const W = Number(process.argv[5] || 1920);
 const H = Number(process.argv[6] || 1080);
-const UD = (process.env.TEMP || '.') + '\\qwcdp-' + process.pid;
+const UD = profileDir(`qwcdp-${process.pid}`);
+fs.mkdirSync(UD, { recursive: true });
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+const SANDBOX = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : [];
 const chrome = spawn(CHROME, [
-  '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+  '--headless=new', '--disable-gpu', ...SANDBOX, '--no-first-run', '--no-default-browser-check',
   `--user-data-dir=${UD}`, `--remote-debugging-port=${PORT}`,
   '--force-device-scale-factor=1', `--window-size=${W},${H}`, '--hide-scrollbars', 'about:blank',
 ], { stdio: 'ignore' });
@@ -34,7 +39,7 @@ try {
   }
   if (!pageWs) throw new Error('chrome devtools not reachable');
 
-  const ws = new WebSocket(pageWs);
+  const ws = wsConnect(pageWs);
   await new Promise((res, rej) => {
     const t = setTimeout(() => rej(new Error('cdp ws open timeout')), 10000);
     ws.onopen = () => { clearTimeout(t); res(); };

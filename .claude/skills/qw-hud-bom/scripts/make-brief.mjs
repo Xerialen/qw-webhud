@@ -20,7 +20,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Project-scoped skill: it lives at <repo>/.claude/skills/qw-hud-bom/scripts, so the qw-webhud repo
 // root is four levels up. QW_WEBHUD_DIR overrides (e.g. if this skill is copied elsewhere).
 const REPO = process.env.QW_WEBHUD_DIR || path.resolve(__dirname, '..', '..', '..', '..');
-const CHROME = process.env.CHROME || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+// Reuse the repo's cross-platform helpers (resolved via REPO so QW_WEBHUD_DIR keeps working).
+const { resolveChrome, profileDir } = await import(pathToFileURL(path.join(REPO, 'scripts', '_chrome.mjs')).href);
+const { wsConnect } = await import(pathToFileURL(path.join(REPO, 'src', 'ws-lite.js')).href);
+const CHROME = resolveChrome();
+const SANDBOX = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : [];
 // Default to an ISOLATED port pair (not the app's 7777/27999) so a live engine feed can't hijack the
 // capture: on its own port nothing competes, so the crafted snapshot below wins and EVERY component is
 // populated (deterministic, reproducible brief). To instead capture a live HUD, point at the running
@@ -60,9 +64,10 @@ async function up() {
 
 // connect to the page target's debugger ws, navigate, wait, capture width x height, return a PNG buffer.
 async function capture(url, waitMs = 3800, width = 1920, height = 1080) {
-  const ud = path.join(os.tmpdir(), 'qwbom-cdp-' + process.pid + '-' + width);
+  const ud = profileDir('qwbom-cdp-' + process.pid + '-' + width);
+  fs.mkdirSync(ud, { recursive: true });
   const chrome = spawn(CHROME, [
-    '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    '--headless=new', '--disable-gpu', ...SANDBOX, '--no-first-run', '--no-default-browser-check',
     `--user-data-dir=${ud}`, `--remote-debugging-port=${CDP_PORT}`,
     '--force-device-scale-factor=1', `--window-size=${width},${height}`, '--hide-scrollbars', 'about:blank',
   ], { stdio: 'ignore' });
@@ -78,7 +83,7 @@ async function capture(url, waitMs = 3800, width = 1920, height = 1080) {
     }
     if (!pageWs) throw new Error('chrome devtools not reachable');
 
-    const ws = new WebSocket(pageWs);
+    const ws = wsConnect(pageWs);
     await new Promise((res, rej) => {
       const t = setTimeout(() => rej(new Error('cdp ws open timeout')), 10000);
       ws.onopen = () => { clearTimeout(t); res(); };
