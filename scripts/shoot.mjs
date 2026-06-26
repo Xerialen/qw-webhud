@@ -16,7 +16,6 @@ const WAIT = Number(process.argv[4] || 3800);
 const W = Number(process.argv[5] || 1920);
 const H = Number(process.argv[6] || 1080);
 const UD = profileDir(`qwcdp-${process.pid}`);
-fs.mkdirSync(UD, { recursive: true });
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 const SANDBOX = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : [];

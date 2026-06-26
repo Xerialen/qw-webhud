@@ -9,7 +9,9 @@ import path from 'node:path';
 // Windows/macOS os.tmpdir() is fine. Caller passes a unique leaf name (include process.pid).
 export function profileDir(name) {
   const base = process.platform === 'linux' ? path.join(os.homedir(), 'qw-cdp') : os.tmpdir();
-  return path.join(base, name);
+  const dir = path.join(base, name);
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
 }
 
 export function resolveChrome() {

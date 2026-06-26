@@ -73,6 +73,8 @@ function encodeFrame(payload, opcode) {
 // CDP screenshot payloads arrive fragmented). ws:// and wss:// supported.
 //   const ws = wsConnect('ws://127.0.0.1:9444/devtools/page/...');
 //   ws.onopen = () => {}; ws.onmessage = (e) => use(e.data); ws.send(str); ws.close();
+const WS_MAX_FRAME = 256 * 1024 * 1024; // refuse absurd lengths (DoS + dodges Number() precision loss)
+
 export function wsConnect(url) {
   const u = new URL(url);
   const secure = u.protocol === 'wss:';
@@ -80,8 +82,10 @@ export function wsConnect(url) {
   const port = Number(u.port || (secure ? 443 : 80));
   const reqPath = (u.pathname || '/') + (u.search || '');
   const key = crypto.randomBytes(16).toString('base64');
+  const accept = crypto.createHash('sha1').update(key + GUID).digest('base64');
 
-  const queue = [];
+  const queue = [];   // inbound messages buffered until onmessage is assigned
+  const outbox = [];  // outbound payloads buffered until the handshake completes
   let onmessage = null;
   const api = {
     onopen: null, onerror: null, onclose: null, readyState: 0, send, close,
@@ -92,6 +96,14 @@ export function wsConnect(url) {
   let buf = Buffer.alloc(0);
   let upgraded = false;
   let frag = Buffer.alloc(0);
+  let fragActive = false;
+
+  const fail = (msg) => {
+    if (api.readyState === 3) return;
+    api.readyState = 3;
+    if (api.onerror) api.onerror(msg instanceof Error ? msg : new Error(msg));
+    try { sock.destroy(); } catch {}
+  };
 
   const connect = secure ? tls.connect : net.connect;
   const sock = connect({ host, port, servername: secure ? host : undefined }, () => {
@@ -105,30 +117,44 @@ export function wsConnect(url) {
     );
   });
   sock.setNoDelay?.(true);
-  sock.on('error', (e) => { api.readyState = 3; if (api.onerror) api.onerror(e); });
-  sock.on('close', () => { api.readyState = 3; if (api.onclose) api.onclose(); });
+  sock.on('error', (e) => fail(e));
+  sock.on('close', () => { if (api.readyState !== 3) { api.readyState = 3; if (api.onclose) api.onclose(); } });
   sock.on('data', (chunk) => {
     buf = Buffer.concat([buf, chunk]);
     if (!upgraded) {
+      if (buf.length > 32 * 1024) return fail('ws handshake too large');
       const i = buf.indexOf('\r\n\r\n');
       if (i < 0) return;
-      const head = buf.slice(0, i).toString('latin1');
-      if (!/^HTTP\/1\.1 101/i.test(head)) {
-        api.readyState = 3;
-        if (api.onerror) api.onerror(new Error('ws upgrade failed: ' + head.split('\r\n')[0]));
-        sock.destroy(); return;
+      const lines = buf.slice(0, i).toString('latin1').split('\r\n');
+      const hget = (n) => { const l = lines.find(h => h.toLowerCase().startsWith(n + ':')); return l ? l.slice(l.indexOf(':') + 1).trim() : ''; };
+      // Verify the full RFC 6455 handshake (status + Upgrade + Connection + the keyed Accept),
+      // not just "101" — a wrong local service must not be mistaken for a WS peer.
+      if (!/^HTTP\/1\.1 101/i.test(lines[0]) || !/websocket/i.test(hget('upgrade')) ||
+          !/upgrade/i.test(hget('connection')) || hget('sec-websocket-accept') !== accept) {
+        return fail('ws upgrade rejected: ' + lines[0]);
       }
       upgraded = true; api.readyState = 1; buf = buf.slice(i + 4);
       if (api.onopen) api.onopen();
+      while (outbox.length) { try { sock.write(encodeClientFrame(outbox.shift(), 0x1)); } catch {} }
     }
     let f;
     while ((f = decodeClientFrame(buf))) {
+      if (f.oversize) return fail('ws frame too large');
       buf = f.rest;
-      if (f.opcode === 0x8) { close(); return; }            // close
-      if (f.opcode === 0x9) { try { sock.write(encodeClientFrame(f.payload, 0xA)); } catch {} continue; } // ping->pong
-      if (f.opcode === 0xA) continue;                        // pong
-      if (f.opcode === 0x0) frag = Buffer.concat([frag, f.payload]); // continuation
-      else frag = f.payload;                                 // text/binary start
+      if (f.rsv) return fail('ws RSV bit set (unnegotiated extension)');
+      if (f.masked) return fail('ws server frame is masked');          // RFC: servers must not mask
+      if (f.opcode >= 0x8) {                                           // control frame
+        if (!f.fin || f.payload.length > 125) return fail('ws bad control frame');
+        if (f.opcode === 0x8) { close(); return; }                    // close
+        if (f.opcode === 0x9) { try { sock.write(encodeClientFrame(f.payload, 0xA)); } catch {} } // ping->pong
+        continue;                                                      // 0xA pong: ignore
+      }
+      if (f.opcode === 0x0) { if (!fragActive) return fail('ws continuation without start'); }
+      else if (f.opcode === 0x1 || f.opcode === 0x2) { if (fragActive) return fail('ws new data frame mid-fragment'); frag = Buffer.alloc(0); }
+      else return fail('ws reserved opcode ' + f.opcode);
+      frag = Buffer.concat([frag, f.payload]);
+      if (frag.length > WS_MAX_FRAME) return fail('ws message too large');
+      fragActive = !f.fin;
       if (f.fin) {
         const data = frag.toString('utf8'); frag = Buffer.alloc(0);
         if (onmessage) onmessage({ data }); else queue.push({ data });
@@ -138,6 +164,8 @@ export function wsConnect(url) {
 
   function send(str) {
     const payload = Buffer.from(typeof str === 'string' ? str : String(str), 'utf8');
+    if (api.readyState === 0) { outbox.push(payload); return; }        // queue until open
+    if (api.readyState !== 1) return;                                  // closing/closed: drop
     try { sock.write(encodeClientFrame(payload, 0x1)); } catch {}
   }
   function close() {
@@ -149,22 +177,29 @@ export function wsConnect(url) {
   return api;
 }
 
-// Parse one frame from buf; return {fin, opcode, payload, rest} or null if incomplete.
+// Parse one frame from buf; return {fin, rsv, opcode, masked, payload, rest}, {oversize:true},
+// or null if the frame is not yet fully buffered.
 function decodeClientFrame(buf) {
   if (buf.length < 2) return null;
   const fin = (buf[0] & 0x80) !== 0;
+  const rsv = (buf[0] & 0x70) !== 0;
   const opcode = buf[0] & 0x0f;
   const masked = (buf[1] & 0x80) !== 0;
   let len = buf[1] & 0x7f;
   let off = 2;
   if (len === 126) { if (buf.length < 4) return null; len = buf.readUInt16BE(2); off = 4; }
-  else if (len === 127) { if (buf.length < 10) return null; len = Number(buf.readBigUInt64BE(2)); off = 10; }
+  else if (len === 127) {
+    if (buf.length < 10) return null;
+    const big = buf.readBigUInt64BE(2);
+    if (big > BigInt(WS_MAX_FRAME)) return { oversize: true }; // also keeps len < 2^53 (no Number() loss)
+    len = Number(big); off = 10;
+  }
   let mask = null;
   if (masked) { if (buf.length < off + 4) return null; mask = buf.slice(off, off + 4); off += 4; }
   if (buf.length < off + len) return null;
   let payload = buf.slice(off, off + len);
   if (masked) { payload = Buffer.from(payload); for (let i = 0; i < len; i++) payload[i] ^= mask[i & 3]; }
-  return { fin, opcode, payload, rest: buf.slice(off + len) };
+  return { fin, rsv, opcode, masked, payload, rest: buf.slice(off + len) };
 }
 
 // Client->server frame: FIN + opcode, payload masked (RFC 6455 requires client masking).

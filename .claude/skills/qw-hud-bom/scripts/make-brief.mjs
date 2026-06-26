@@ -65,7 +65,6 @@ async function up() {
 // connect to the page target's debugger ws, navigate, wait, capture width x height, return a PNG buffer.
 async function capture(url, waitMs = 3800, width = 1920, height = 1080) {
   const ud = profileDir('qwbom-cdp-' + process.pid + '-' + width);
-  fs.mkdirSync(ud, { recursive: true });
   const chrome = spawn(CHROME, [
     '--headless=new', '--disable-gpu', ...SANDBOX, '--no-first-run', '--no-default-browser-check',
     `--user-data-dir=${ud}`, `--remote-debugging-port=${CDP_PORT}`,
