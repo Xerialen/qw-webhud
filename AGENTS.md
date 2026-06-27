@@ -5,7 +5,7 @@ this repository. Tool-specific files (CLAUDE.md, codex.md) are thin and defer he
 
 ## 1. Read before changing anything
 
-Always read docs/current-stage.md first Ã¢â‚¬â€ it is the re-entry point.
+Always read docs/current-stage.md first ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â it is the re-entry point.
 Then, if they exist, read in this order:
 
 1. docs/vision.md
@@ -13,7 +13,7 @@ Then, if they exist, read in this order:
 3. docs/roadmap.md
 4. docs/current-stage.md  (re-read; this is the operative file)
 
-If a doc does not exist yet, that is fine Ã¢â‚¬â€ this project may be at Tier 0.
+If a doc does not exist yet, that is fine ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â this project may be at Tier 0.
 
 ## 1.5. Role and maturity model
 
@@ -63,25 +63,25 @@ You are trusted to execute autonomously. Do not stop for approval on every
 small step. But you must prove your work against the documented reality of
 this project. "It seems to work" is not acceptable.
 
-### Hook 1 Ã¢â‚¬â€ Ground truth (no fake criteria)
+### Hook 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Ground truth (no fake criteria)
 - Before writing code, extract the ACTUAL current success metric from
   docs/success-criteria.md and the current objective from docs/current-stage.md.
 - Do not invent your own completion criteria.
 - If those docs are missing or dangerously ambiguous, STOP and ask the human
   to define them. Do not proceed on a guessed goal.
 
-### Hook 2 Ã¢â‚¬â€ Validation loop (anti-slop)
+### Hook 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Validation loop (anti-slop)
 - Before modifying source, define exactly how the change will be validated,
   based on docs/testing-and-validation.md (or state the method inline if that
   doc doesn't exist yet).
-- Where applicable, run the validation FIRST to confirm it fails Ã¢â‚¬â€ establish a
+- Where applicable, run the validation FIRST to confirm it fails ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â establish a
   baseline.
 - Implement the strict minimum to pass. No speculative features, no
   "future-proofing" slop.
 
-### Hook 3 Ã¢â‚¬â€ Self-correction with surfaced evidence
+### Hook 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Self-correction with surfaced evidence
 - Run the validation again after implementing.
-- If it fails, self-correct the implementation Ã¢â‚¬â€ but SURFACE the correction
+- If it fails, self-correct the implementation ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â but SURFACE the correction
   and why it was needed. Never silently patch over a failure; silent guessing
   is a failure mode, not a feature.
 - Do not declare a task done until real environment output proves it.
@@ -93,7 +93,7 @@ this project. "It seems to work" is not acceptable.
 
 Non-trivial implementations, design docs, significant refactors, and PRs get an
 independent review when the maturity level requires it. Do not self-review in
-place of that. If review tooling is unavailable, say so Ã¢â‚¬â€ do not skip it.
+place of that. If review tooling is unavailable, say so ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â do not skip it.
 
 Use `reviewer.md` for review work.
 
