@@ -1,0 +1,23 @@
+# qw-webhud bridge — boot-persistent systemd unit (deployed on servexeri 2026-06-26).
+# Install: sudo cp extras/deploy/qw-webhud.service /etc/systemd/system/ && sudo systemctl enable --now qw-webhud
+# Loopback-only (127.0.0.1:7777); reach from another machine via: ssh -L 7777:localhost:7777 servexeri
+# Runs on system Node 18 — the bridge uses the hand-rolled WS *server* (src/ws-lite.js), not a client.
+# Drop `--mock` once a real cl_hudexport engine feed exists (FU-3 / B1).
+[Unit]
+Description=qw-webhud bridge — live web HUD relay for ezQuake (UDP cl_hudexport -> WebSocket)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xerial
+WorkingDirectory=/home/xerial/qw-webhud
+ExecStart=/usr/bin/node src/bridge.js --mock
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qw-webhud
+
+[Install]
+WantedBy=multi-user.target

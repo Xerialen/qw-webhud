@@ -1,9 +1,10 @@
 // wscheck.mjs — smoke-test the bridge: connect to the WS, collect N frames, print shape + fps.
-// Uses Node's built-in global WebSocket client (Node >= 22). Run while `bridge.js --mock` is up.
+// Uses the vendored RFC 6455 client (zero-dep; runs on Node 18). Run while `bridge.js --mock` is up.
 //   node scripts/wscheck.mjs
+import { wsConnect } from '../src/ws-lite.js';
 const url = process.env.WS || 'ws://localhost:7777/ws';
 const want = Number(process.env.N || 60);
-const ws = new WebSocket(url);
+const ws = wsConnect(url);
 let n = 0, first = null, t0 = 0, lastSeq = null, gaps = 0;
 
 ws.onopen = () => console.log('connected:', url);
