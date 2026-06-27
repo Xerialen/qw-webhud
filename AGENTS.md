@@ -5,7 +5,7 @@ this repository. Tool-specific files (CLAUDE.md, codex.md) are thin and defer he
 
 ## 1. Read before changing anything
 
-Always read docs/current-stage.md first — it is the re-entry point.
+Always read docs/current-stage.md first â€” it is the re-entry point.
 Then, if they exist, read in this order:
 
 1. docs/vision.md
@@ -13,7 +13,7 @@ Then, if they exist, read in this order:
 3. docs/roadmap.md
 4. docs/current-stage.md  (re-read; this is the operative file)
 
-If a doc does not exist yet, that is fine — this project may be at Tier 0.
+If a doc does not exist yet, that is fine â€” this project may be at Tier 0.
 
 ## 1.5. Role and maturity model
 
@@ -63,25 +63,25 @@ You are trusted to execute autonomously. Do not stop for approval on every
 small step. But you must prove your work against the documented reality of
 this project. "It seems to work" is not acceptable.
 
-### Hook 1 — Ground truth (no fake criteria)
+### Hook 1 â€” Ground truth (no fake criteria)
 - Before writing code, extract the ACTUAL current success metric from
   docs/success-criteria.md and the current objective from docs/current-stage.md.
 - Do not invent your own completion criteria.
 - If those docs are missing or dangerously ambiguous, STOP and ask the human
   to define them. Do not proceed on a guessed goal.
 
-### Hook 2 — Validation loop (anti-slop)
+### Hook 2 â€” Validation loop (anti-slop)
 - Before modifying source, define exactly how the change will be validated,
   based on docs/testing-and-validation.md (or state the method inline if that
   doc doesn't exist yet).
-- Where applicable, run the validation FIRST to confirm it fails — establish a
+- Where applicable, run the validation FIRST to confirm it fails â€” establish a
   baseline.
 - Implement the strict minimum to pass. No speculative features, no
   "future-proofing" slop.
 
-### Hook 3 — Self-correction with surfaced evidence
+### Hook 3 â€” Self-correction with surfaced evidence
 - Run the validation again after implementing.
-- If it fails, self-correct the implementation — but SURFACE the correction
+- If it fails, self-correct the implementation â€” but SURFACE the correction
   and why it was needed. Never silently patch over a failure; silent guessing
   is a failure mode, not a feature.
 - Do not declare a task done until real environment output proves it.
@@ -93,7 +93,7 @@ this project. "It seems to work" is not acceptable.
 
 Non-trivial implementations, design docs, significant refactors, and PRs get an
 independent review when the maturity level requires it. Do not self-review in
-place of that. If review tooling is unavailable, say so — do not skip it.
+place of that. If review tooling is unavailable, say so â€” do not skip it.
 
 Use `reviewer.md` for review work.
 
@@ -122,3 +122,44 @@ parallel memory system that competes with what the owner already maintains.
 When resuming, do not trust docs/current-stage.md blindly. Reconcile it against
 the live state of the repo (git log, file state, test results). If they
 disagree, trust the live state and correct the doc before doing anything else.
+
+<!-- codex-review-gate:start -->
+## Review Gate Contract
+
+This repository uses the same gate flow as `Xerialen/komodobots`:
+
+- New or updated PRs are reset to `gate: reviewing`.
+- A reviewer reviews only the current head SHA.
+- The reviewer applies exactly one terminal label when warranted: `gate: ready` or `gate: blocked`.
+- Draft PRs must never receive `gate: ready`.
+- A deterministic GitHub Action merges only when the PR is open, non-draft, targets the repository default branch, has `gate: ready`, lacks `gate: blocked`, has a current-head SHA-bound PASS comment, and all non-gate checks including `PR Tests` are green.
+- New commits make earlier gate decisions stale and require reassessment.
+
+Role separation:
+
+- Coder implements.
+- Reviewer reviews technical merge safety.
+- Merge executor only merges after the deterministic gate passes.
+- Codex-authored PRs require independent non-Codex review before being treated as independently reviewed.
+
+Whenever Codex posts a GitHub issue, PR, PR review, review comment, issue comment, or merge/gate comment through `@Xerialen`, include this visible line:
+
+`_Posted by Codex via @Xerialen._`
+
+Required gate comment format:
+
+```text
+## Decision
+DECISION: BLOCK | PASS
+## Label applied
+LABEL: gate: blocked | gate: ready
+## Reviewed head SHA
+HEAD_SHA: <current PR head sha>
+## Blocking findings
+For each (or "None."): Severity / File-area / Problem / Why this blocks merge / Required fix.
+## Non-blocking notes
+Concrete technical notes only (or "None.").
+```
+
+Before applying a gate decision, classify whether the PR is ML-impacting. If it touches data extraction, datasets, training, model behavior, evaluation, metrics, inference, ML documentation, or evidence ledgers, read and apply `machine-learning-reviewer.md`. For non-ML PRs, say explicitly that the PR is not ML-impacting.
+<!-- codex-review-gate:end -->
