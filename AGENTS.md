@@ -17,7 +17,7 @@ If a doc does not exist yet, that is fine ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
 
 ## 1.5. Role and maturity model
 
-This template is agent-agnostic. Claude, Codex, ChatGPT, Gemini, or another
+This template is agent-agnostic. Claude, Codex, GLM, ChatGPT, or another
 capable agent may act as Coder or Reviewer when the owner assigns that role.
 
 - Coder role: `coder.md`
@@ -140,11 +140,11 @@ Role separation:
 - Coder implements.
 - Reviewer reviews technical merge safety.
 - Merge executor only merges after the deterministic gate passes.
-- Codex-authored PRs require independent non-Codex review before being treated as independently reviewed.
+- Agent-authored PRs require independent review by a different agent (a different model than the author) before being treated as independently reviewed.
 
-Whenever Codex posts a GitHub issue, PR, PR review, review comment, issue comment, or merge/gate comment through `@Xerialen`, include this visible line:
+Whenever an AI agent posts a GitHub issue, PR, PR review, review comment, issue comment, or merge/gate comment through `@Xerialen`, include a visible line naming the posting agent:
 
-`_Posted by Codex via @Xerialen._`
+`_Posted by <agent> via @Xerialen._`
 
 Required gate comment format:
 
