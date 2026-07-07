@@ -31,7 +31,10 @@ const POOLS = [
 const POOL_COLOR = { shells: 'var(--pool-shells)', nails: 'var(--pool-nails)', rockets: 'var(--pool-rockets)', cells: 'var(--pool-cells)' };
 const POOL_NAME = { shells: 'SHELLS', nails: 'NAILS', rockets: 'ROCKETS', cells: 'CELLS' };
 
-const healthClass = (h) => (h <= 25 ? 'v-crit' : h <= 50 ? 'v-warn' : 'v-white');
+const healthClass = (h) => {
+  const v = h ?? 0;
+  return v <= 25 ? 'v-crit' : v <= 50 ? 'v-warn' : 'v-white';
+};
 const armorTierName = (t) => (t === 3 ? 'red' : t === 2 ? 'yellow' : 'green'); // 1/0 -> green
 const mmss = (s) => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); };
 
@@ -71,10 +74,11 @@ export const QHLAN_ELEMENTS = {
       const me = state?.me; const kind = el.opts?.kind || 'health';
       if (!me) { node.innerHTML = ''; return; }
       if (kind === 'health') {
-        const crit = me.health <= 25;
+        const hp = me.health ?? 0;
+        const crit = hp <= 25;
         node.innerHTML =
           `<div class="hp bigstat bigstat--health${crit ? ' is-crit' : ''}">` +
-            `<div class="bigstat__num ${healthClass(me.health)}">${Math.max(0, Math.round(me.health))}</div>` +
+            `<div class="bigstat__num ${healthClass(hp)}">${Math.max(0, Math.round(hp))}</div>` +
             `<div class="bigstat__lbl">HEALTH</div>` +
           `</div>`;
       } else if (kind === 'armor') {
@@ -204,7 +208,7 @@ export const QHLAN_ELEMENTS = {
     size: 2.4,
     defaultOpts: {},
     render(node, el, state) {
-      const list = (state?.teaminfo || []).filter(t => !t.stale);
+      const list = (state?.teaminfo || []).filter(t => t && !t.stale);
       if (!list.length) { node.innerHTML = ''; return; }
       const team = state?.me?.team || '';
       const selfName = state?.me?.name;

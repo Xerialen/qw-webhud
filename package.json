@@ -8,7 +8,8 @@
   "scripts": {
     "start": "node src/bridge.js",
     "dev": "node src/bridge.js --mock",
-    "mock": "node src/feeds/mock.js"
+    "mock": "node src/feeds/mock.js",
+    "test": "node --test tests/*.mjs"
   },
   "license": "MIT"
 }

@@ -10,6 +10,7 @@ param([string]$Out = $(if ($env:QW_OVERLAY_SHOT) { $env:QW_OVERLAY_SHOT } else {
 # compositing; or a game changing the display mode mid-session — which once yielded a 1920x1440 grab here).
 # For authoritative HUD-LAYOUT checks use ../../scripts/shoot.mjs at the target resolution (a deterministic
 # headless render); this desktop grab is for confirming the overlay composites ON TOP of the game.
+if (-not ("Dpi" -as [type])) {
 Add-Type @"
 using System;using System.Runtime.InteropServices;
 public class Dpi {
@@ -17,6 +18,7 @@ public class Dpi {
   [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
 }
 "@ 2>$null
+}
 # DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = (HANDLE)-4; legacy SetProcessDPIAware is the fallback.
 try { if (-not [Dpi]::SetProcessDpiAwarenessContext([IntPtr]::new(-4))) { [void][Dpi]::SetProcessDPIAware() } }
 catch { try { [void][Dpi]::SetProcessDPIAware() } catch {} }

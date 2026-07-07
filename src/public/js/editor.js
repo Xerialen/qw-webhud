@@ -135,7 +135,9 @@ let drag = null;
 $('stage').addEventListener('mousedown', (e) => {
   const node = e.target.closest('.hel, .hud-el'); if (!node) { deselect(); return; }
   const id = node.dataset.id; select(id);
-  const el = elById(id); const rect = $('stage').getBoundingClientRect();
+  const el = elById(id);
+  const stageNode = $('stage').querySelector('.hud-stage') || $('stage');
+  const rect = stageNode.getBoundingClientRect();
   drag = { id, sx: e.clientX, sy: e.clientY, x0: el.x, y0: el.y, rw: rect.width, rh: rect.height };
   node.classList.add('dragging');
   e.preventDefault();

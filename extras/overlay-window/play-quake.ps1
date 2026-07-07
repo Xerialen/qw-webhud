@@ -82,10 +82,12 @@ Write-Output "Kill with: Stop-Process -Id $($p.Id) -Force"
 
 # Bring the game window to the foreground during load so it's visible under the overlay (which is
 # always-on-top above it). The overlay window keeps drawing regardless of focus.
+if (-not ("Fg" -as [type])) {
 Add-Type @"
 using System;using System.Runtime.InteropServices;
 public class Fg{[DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);[DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int n);}
 "@ 2>$null
+}
 for ($i=0; $i -lt 16; $i++) {
   $proc = Get-Process -Id $p.Id -EA SilentlyContinue
   if (-not $proc) { Write-Output "ENGINE EXITED during load (i=$i)"; break }

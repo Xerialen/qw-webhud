@@ -50,7 +50,10 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  globalShortcut.register('Control+Alt+Q', () => app.quit()); // panic-close
+  const registered = globalShortcut.register('Control+Alt+Q', () => app.quit()); // panic-close
+  if (!registered) {
+    console.warn('[overlay] Warning: failed to register panic-close shortcut (Ctrl+Alt+Q).');
+  }
 });
 app.on('window-all-closed', () => app.quit());
 app.on('will-quit', () => globalShortcut.unregisterAll());

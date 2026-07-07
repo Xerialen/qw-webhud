@@ -1,6 +1,6 @@
 # Current Stage
 
-last-verified: 2026-06-21
+last-verified: 2026-07-08
 status: active
 maturity: stage-1-prototype
 
@@ -29,7 +29,23 @@ Web app works end-to-end against a synthetic mock feed (validated in-browser, DO
 - Overlay renders on each WS frame (not requestAnimationFrame), so it doesn't freeze when the
   window/OBS source is backgrounded; throttled to ~70fps.
 
+## Branch / PR state (2026-07-08)
+Branch `feat/web-overlay-demoshots` is open as PR #2. Since the 2026-06-21 baseline it adds the no-OBS
+Electron overlay window, QHLAN fixed-1080 theme layouts, Node-18-compatible headless render tooling,
+and public-release bootstrap path cleanup. The six unresolved Gemini review threads on PR #2 were
+addressed locally and covered by `npm test`.
+
+GitHub checks are currently blocked before runner startup by an account billing/spending-limit
+annotation, not by test output. Publishing the local fix is also blocked by repository ruleset
+`Protection`, which applies PR + verified-signature rules to `~ALL` branches with no bypass actor.
+Local evidence and the exact rule details are recorded in `docs/findings-log.md`.
+
 ## Next smallest useful step
+For PR #2: adjust the repository ruleset so a fix branch can be updated, publish the local review-fix
+commit/patch, restore GitHub Actions billing/spending so checks can start, then rerun CI and get the
+required independent cross-model review before merge.
+
+For the broader prototype:
 **Build the ezQuake fork** with `cl_hudexport` so the overlay runs off the real game (currently it
 runs off the mock + the C self-test). The module is written, wired, and committed on fork branch
 `feat/cl-hudexport` (local, not pushed); its serializer + UDP path are validated end-to-end. The one
