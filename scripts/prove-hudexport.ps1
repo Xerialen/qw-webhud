@@ -14,15 +14,17 @@
 #>
 param(
   [Parameter(Mandatory=$true)][string]$Exe,
-  [string]$Demo = "C:\Users\benya\demoshots-demos\4on4_]sr[_vs_book[dm3]20260109-1932.mvd",
+  # Demo defaults from $env:QW_DEMO; pass -Demo <path-to-.mvd> to override.
+  [string]$Demo = $env:QW_DEMO,
   [int]$Seek    = 600,
   [int]$Port    = 27999,
   [int]$Win     = 1280,
   [int]$WinH    = 720,
   [int]$LoadWait= 16,
-  [string]$Lab  = "C:\Users\benya\projects\quakeworld\data\quake-development\clients\ezquake-hud-lab"
+  [string]$Lab  = $(if ($env:QW_HUD_LAB) { $env:QW_HUD_LAB } else { Join-Path $HOME 'qw-hud-lab' })
 )
 $ErrorActionPreference = "Stop"
+if (-not $Demo) { throw "No demo set. Pass -Demo <path-to-.mvd> or set `$env:QW_DEMO." }
 $qw  = Join-Path $Lab "qw"
 if ($qw -like "C:\nQuake*") { throw "Refusing to target the personal install C:\nQuake" }
 if (-not (Test-Path -LiteralPath $Exe))  { throw "exe not found: $Exe" }

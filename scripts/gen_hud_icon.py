@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """gen_hud_icon.py - generate a HUD icon locally via ComfyUI (SDXL) and cut it out with rembg.
 
-Runs in WSL2 with the ComfyUI venv python (has requests + rembg):
-  /home/xerial/tools/ComfyUI/venv/bin/python scripts/gen_hud_icon.py \
+Runs with a ComfyUI venv python that has requests + rembg (Linux/WSL2 example):
+  "$COMFYUI_VENV/bin/python" scripts/gen_hud_icon.py \
       --name quad --prompt "glowing quad damage crystal icon, ..." [--no-rembg]
 
 Talks to ComfyUI on 127.0.0.1:8188 (mirrored WSL net -> same socket from Windows). Writes the

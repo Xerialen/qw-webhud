@@ -55,7 +55,7 @@ If client->server messaging or compression is ever needed, adopt the `ws` packag
 ### Decision
 The headless-render tooling (`scripts/shoot.mjs`, `obs-shoot.mjs`, `wscheck.mjs`, the qw-hud-bom
 `make-brief.mjs`) needs a WebSocket *client*. Node's global `WebSocket` only exists on Node >= 21, which
-broke the render on the servexeri host (system Node 18). Rather than add the `ws` package (D3 zero-dep),
+broke the render on a deploy host running system Node 18. Rather than add the `ws` package (D3 zero-dep),
 a ~110-line RFC 6455 client `wsConnect()` was added to `src/ws-lite.js` (alongside the existing server),
 masking client frames and reassembling fragmented incoming frames (large CDP screenshot payloads).
 ### Evidence

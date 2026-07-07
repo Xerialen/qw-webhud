@@ -2,7 +2,7 @@
   shoot-desktop.ps1 — capture the PRIMARY monitor (game + always-on-top overlay composited)
   to a PNG so we can verify the HTML HUD is actually drawing over ezQuake in-game.
 #>
-param([string]$Out = "C:\Users\benya\qw-overlay-shot.png")
+param([string]$Out = $(if ($env:QW_OVERLAY_SHOT) { $env:QW_OVERLAY_SHOT } else { Join-Path $HOME 'qw-overlay-shot.png' }))
 
 # Capture real pixels on a high-DPI / multi-monitor desktop. Prefer per-monitor-aware V2 (correct when
 # monitors run at different scaling, as on a mixed 27"+49" rig); fall back to the legacy system-DPI call.

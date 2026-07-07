@@ -7,13 +7,17 @@
   Pair with main.js (the transparent overlay window). Bridge must already be running (UDP $Port -> :7777).
 #>
 param(
-  [string]$Exe  = "C:\Users\benya\projects\quakeworld\data\quake-development\clients\ezquake-hud-lab\ezquake-hud.exe",
-  [string]$Lab  = "C:\Users\benya\projects\quakeworld\data\quake-development\clients\ezquake-hud-lab",
-  [string]$Demo = "C:\Users\benya\demoshots-demos\4on4_book_vs_-s-[dm3]20260110-2106.mvd",
+  # Paths default from environment variables so nothing machine-specific is baked in.
+  # Set QW_HUD_LAB / QW_HUD_EXE / QW_DEMO, or pass -Lab / -Exe / -Demo explicitly.
+  [string]$Lab  = $(if ($env:QW_HUD_LAB) { $env:QW_HUD_LAB } else { Join-Path $HOME 'qw-hud-lab' }),
+  [string]$Exe  = $env:QW_HUD_EXE,
+  [string]$Demo = $env:QW_DEMO,
   [int]$Seek    = 60,
   [int]$Port    = 27999
 )
 $ErrorActionPreference = "Stop"
+if (-not $Exe)  { $Exe  = Join-Path $Lab 'ezquake-hud.exe' }
+if (-not $Demo) { throw "No demo set. Pass -Demo <path-to-.mvd> or set `$env:QW_DEMO." }
 $qw = Join-Path $Lab "qw"
 if ($qw -like "C:\nQuake*") { throw "Refusing to target the personal install C:\nQuake" }
 if (-not (Test-Path -LiteralPath $Exe))  { throw "exe not found: $Exe" }

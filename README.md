@@ -33,6 +33,18 @@ for status.
 
 ## Quick start
 
+Requires **Node.js >= 18** — that's it. There are **no runtime dependencies**, so there is no
+`npm install` step.
+
+```bash
+# clone, then bootstrap (verifies Node and starts the mock bridge)
+./bootstrap.sh          # Linux / macOS / WSL2
+./bootstrap.ps1         # Windows PowerShell
+#   add --check / -Check to verify the environment without starting anything
+```
+
+Or run it directly:
+
 ```bash
 # 1. run the bridge with the synthetic mock feed (no engine needed)
 node src/bridge.js --mock
@@ -45,6 +57,22 @@ node src/bridge.js --mock
 
 With the real engine instead of `--mock`: run `node src/bridge.js`, launch the ezQuake fork built
 with `cl_hudexport`, and set `cl_hudexport 1` in-game (port via `cl_hudexport_port`, default 27999).
+
+### Configuration (capture / overlay helper scripts)
+
+The bridge and web app need no configuration. The optional helper scripts under `scripts/` and
+`extras/overlay-window/` that drive a *real* ezQuake for demoshots/casting read these environment
+variables so no machine-specific paths are hard-coded — set them, or pass the matching parameter:
+
+| Variable | Used by | Meaning |
+| --- | --- | --- |
+| `QW_HUD_LAB` | capture-obs, prove-hudexport, play-quake | ezQuake "lab" client dir (holds `qw/` and the exe). Defaults to `$HOME/qw-hud-lab`. |
+| `QW_HUD_EXE` | play-quake | The `cl_hudexport` ezQuake binary. Defaults to `$QW_HUD_LAB/ezquake-hud.exe`. |
+| `QW_DEMO` | capture-obs, prove-hudexport, play-quake | Path to the `.mvd`/`.qwd` demo to play. |
+| `QW_OVERLAY_SHOT` | shoot-desktop | Output PNG for the desktop grab. Defaults to `$HOME/qw-overlay-shot.png`. |
+
+`extras/deploy/qw-webhud.service` is a systemd **template** — edit `User=` and `WorkingDirectory=`
+before installing.
 
 ### Using the overlay over the game / in OBS
 - **OBS:** add a Browser source -> `http://localhost:7777/overlay.html`, sized to your canvas. The
