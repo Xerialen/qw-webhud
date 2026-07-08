@@ -37,6 +37,21 @@ export function start({ port = 27999, host = '127.0.0.1', hz = 60 } = {}) {
 
   const WEAPON_AMMO = { rl: 'rockets', lg: 'cells', sg: 'shells', ssg: 'shells', ng: 'nails' };
 
+  // raw QW obituary lines the browser parses into the killfeed (PROTOCOL.md events.messages).
+  // Seeded so the killfeed is populated on load; live frags/deaths prepend below.
+  const messages = [                         // newest first; kept short, like the engine notify ring
+    'volkov was zapped by X-ray',
+    'X-ray was rocketed by low',
+    'mix was gunned down by sail',
+  ];
+  const ENEMIES = ['mix', 'low', 'volkov', 'lakso', 'slice'];
+  const KILL_VERB = { rl: 'was rocketed by', lg: 'was zapped by', sg: 'was gunned down by',
+    ssg: 'was gunned down by', ng: 'was nailed by' };
+  const obituary = (victim, killer, wid) => {
+    messages.unshift(`${victim} ${KILL_VERB[wid] || 'was fragged by'} ${killer}`);
+    if (messages.length > 6) messages.length = 6;
+  };
+
   const tick = () => {
     const t = (Date.now() - t0) / 1000;
 
@@ -54,6 +69,7 @@ export function start({ port = 27999, host = '127.0.0.1', hz = 60 } = {}) {
         if (armor === 0) armorKind = 0;
         if (health <= 0) { // died -> respawn shortly
           deaths++;
+          obituary('X-ray', choice(ENEMIES), choice(['rl', 'lg', 'sg']));
           centerprint = 'You died'; centerUntil = t + 1.5;
         }
       } else if (roll < 0.62) { // armour pickup
@@ -62,6 +78,7 @@ export function start({ port = 27999, host = '127.0.0.1', hz = 60 } = {}) {
         health = clamp(health + choice([15, 25, 100]), 0, 250);
       } else if (roll < 0.9) { // frag
         frags++; teams[0].frags++;
+        obituary(choice(ENEMIES), 'X-ray', weaponId);
       } else if (roll < 0.96) { // quad
         quadUntil = t + 30; centerprint = 'QUAD DAMAGE'; centerUntil = t + 2;
       } else { // weapon swap
@@ -110,6 +127,7 @@ export function start({ port = 27999, host = '127.0.0.1', hz = 60 } = {}) {
       teams: teams.map(x => ({ ...x })),
       teaminfo: mates.map(m => ({ ...m, stale: false })),
       events: {
+        messages: [...messages],
         centerprint,
         last_damage: { ...lastDamage },
       },
