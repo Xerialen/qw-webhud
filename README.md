@@ -8,6 +8,14 @@ quake screen.
 This is the general, live evolution of the hub.quakeworld.nu HUD model (an FTE canvas with a
 web-rendered HUD overlay): same idea, but for ezQuake, live, low-latency, and fully editable.
 
+> ## ⚠️ Streaming/casting tool — not approved for competitive play
+>
+> Using qw-webhud **while you play has not been approved by any QuakeWorld league, admin, or
+> ruleset.** It is intended for **streaming and casting**. The "Play privately" path below puts the
+> HUD on top of your own live game — that is **unsanctioned**: do **not** use it in matches, pickups,
+> or league games. If you run it while playing, that is entirely at your own risk. When in doubt,
+> keep it on the stream, not on your game.
+
 ## How it works
 
 ```
@@ -31,10 +39,15 @@ web-rendered HUD overlay): same idea, but for ezQuake, live, low-latency, and fu
 See [`PROTOCOL.md`](PROTOCOL.md) for the wire format and [`docs/current-stage.md`](docs/current-stage.md)
 for status.
 
-## Quick start
+## Getting started
 
-Requires **Node.js >= 18** — that's it. There are **no runtime dependencies**, so there is no
-`npm install` step.
+You need **Node.js >= 18** — that's it. There are **no runtime dependencies**, so there is no
+`npm install` step for the core app. Pick the path that matches what you want to do.
+
+### Path 1 — try it / edit the HUD (no game needed)
+
+Everything runs off a synthetic **mock feed**, so you can design and preview the HUD without Quake at
+all.
 
 ```bash
 # clone, then bootstrap (verifies Node and starts the mock bridge)
@@ -46,19 +59,51 @@ Requires **Node.js >= 18** — that's it. There are **no runtime dependencies**,
 Or run it directly:
 
 ```bash
-# 1. run the bridge with the synthetic mock feed (no engine needed)
 node src/bridge.js --mock
-
-# 2. open the editor and the overlay
-#    editor:  http://localhost:7777/editor.html
-#    overlay: http://localhost:7777/overlay.html?bg=check&dbg
-#             (bg=check = checkerboard so you can see the transparent overlay; dbg = fps/latency)
+#   editor:  http://localhost:7777/editor.html
+#   overlay: http://localhost:7777/overlay.html?bg=check&dbg
+#            (bg=check = checkerboard so you can see the transparent overlay; dbg = fps/latency)
 ```
 
-With the real engine instead of `--mock`: run `node src/bridge.js`, launch the ezQuake fork built
-with `cl_hudexport`, and set `cl_hudexport 1` in-game (port via `cl_hudexport_port`, default 27999).
+### Path 2 — stream / cast with the live HUD ✅ intended use
 
-### Configuration (capture / overlay helper scripts)
+This drives the overlay from a **real game**, composited into your broadcast. It needs an ezQuake
+client that can export its HUD state — the `cl_hudexport` build (see
+[The ezQuake side](#the-ezquake-side--cl_hudexport) below).
+
+1. Start the bridge: `node src/bridge.js`
+2. Launch the `cl_hudexport` ezQuake build, turn its native HUD off, and set `cl_hudexport 1`
+   in-game (port via `cl_hudexport_port`, default `27999`).
+3. Put the overlay into your broadcast, either:
+   - **OBS** — add a **Browser source** → `http://localhost:7777/overlay.html`, sized to your canvas.
+     The page background is transparent, so only the HUD composites over your game capture; **or**
+   - **capture the overlay window** — run `extras/overlay-window/` (a transparent, always-on-top
+     window that draws the HUD over the game) and capture *that*.
+
+Casters: `cl_hudexport` also works in **demo / MVD playback**, so you can drive the overlay straight
+from a recording — no live game required.
+
+### Path 3 — play privately with the HUD on your screen ⚠️ unapproved
+
+> **Read the warning at the top again.** This renders the web HUD **on top of your own live game**.
+> It has **not been approved by anyone** and must not be used in matches, pickups, or league play.
+> For private testing only, at your own risk.
+
+1. Start the bridge: `node src/bridge.js`
+2. Run the `cl_hudexport` ezQuake build **borderless-windowed** (not exclusive fullscreen), native
+   HUD off, `cl_hudexport 1`.
+3. Launch the overlay window — a transparent, always-on-top, click-through Electron window that floats
+   the HUD over the game with no OBS and no capture card:
+
+   ```bash
+   cd extras/overlay-window
+   npm start
+   ```
+
+   See [`extras/overlay-window/README.md`](extras/overlay-window/README.md) for the window/monitor
+   details.
+
+### Helper-script configuration
 
 The bridge and web app need no configuration. The optional helper scripts under `scripts/` and
 `extras/overlay-window/` that drive a *real* ezQuake for demoshots/casting read these environment
@@ -74,12 +119,27 @@ variables so no machine-specific paths are hard-coded — set them, or pass the 
 `extras/deploy/qw-webhud.service` is a systemd **template** — edit `User=` and `WorkingDirectory=`
 before installing.
 
-### Using the overlay over the game / in OBS
-- **OBS:** add a Browser source -> `http://localhost:7777/overlay.html`, sized to your canvas. The
-  page background is transparent, so only the HUD composits over the game capture.
-- **Live, on top of the game:** run the game borderless-windowed and put a transparent, always-on-top
-  browser window (e.g. a dedicated Chrome `--app` window) over it. A packaged transparent overlay
-  window is a planned convenience (see the roadmap).
+## The ezQuake side — `cl_hudexport`
+
+The two live paths above (streaming and private play) need an ezQuake client that can *export* its
+HUD state. That is a small, cvar-gated engine addition called **`cl_hudexport`**:
+
+- **What it does.** Every rendered frame, the client serialises the whole HUD state (health / armour
+  / ammo / weapons / powerups / score / teaminfo / clock) into one compact JSON snapshot and sends it
+  over a **dedicated local UDP socket** (`127.0.0.1`, port `cl_hudexport_port`, default **27999**).
+  `src/bridge.js` forwards those datagrams to the browser unchanged. See [`PROTOCOL.md`](PROTOCOL.md)
+  for the exact wire format the browser consumes.
+- **How to turn it on.** It is **off by default** (`cl_hudexport 0`). Set `cl_hudexport 1` to start
+  exporting; change the port with `cl_hudexport_port`. It also runs during **demo / MVD playback**,
+  not just live games.
+- **How it's built.** It is a self-contained module (`cl_hudexport.c` plus a shared serializer
+  header) added to an ezQuake fork, registered in the client build and called once per frame.
+
+> **This repository does not ship the modified ezQuake.** The `cl_hudexport` fork and any prebuilt
+> binary are **not published here**. And — once more — running a HUD export **while you play** is
+> **not approved by anyone** and is unsanctioned in competitive QuakeWorld; treat `cl_hudexport`
+> strictly as a streaming/casting facility. Without a `cl_hudexport`-capable client you can still run
+> everything in **Path 1** against the built-in mock feed (`--mock`).
 
 ## Themes
 
@@ -126,10 +186,13 @@ scripts/wscheck.mjs    WebSocket smoke test
 ## Status
 
 The web app (bridge + overlay + editor) works end-to-end against the mock feed. The ezQuake engine
-export (`cl_hudexport`) is code-ready (source-cited integration plan), pending a cross-compile build.
-See [`docs/current-stage.md`](docs/current-stage.md).
+export (`cl_hudexport`) is code-ready (source-cited integration plan), pending a published client
+build. See [`docs/current-stage.md`](docs/current-stage.md).
 
----
+## Contributing & license
 
-This repository follows the [ai-project-template](https://github.com/Xerialen/ai-project-template)
-conventions: `AGENTS.md` is the agent contract; `docs/current-stage.md` is the re-entry point.
+Contributions are welcome — see [`AGENTS.md`](AGENTS.md) for the project contract and
+[`docs/current-stage.md`](docs/current-stage.md) for the re-entry point. This repository follows the
+[ai-project-template](https://github.com/Xerialen/ai-project-template) conventions.
+
+Licensed under the [MIT License](LICENSE).
