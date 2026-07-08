@@ -48,3 +48,18 @@ Matches the owner's proven stdlib-WS pattern (thevault qw-lab-live-viewer recipe
 `node src/bridge.js`" with no `npm install`.
 ### Revisit Conditions
 If client->server messaging or compression is ever needed, adopt the `ws` package.
+
+## D4 — Vendor a tiny RFC 6455 *client* (not the `ws` dep) for the CDP/OBS tooling
+### Date
+2026-06-26
+### Decision
+The headless-render tooling (`scripts/shoot.mjs`, `obs-shoot.mjs`, `wscheck.mjs`, the qw-hud-bom
+`make-brief.mjs`) needs a WebSocket *client*. Node's global `WebSocket` only exists on Node >= 21, which
+broke the render on a deploy host running system Node 18. Rather than add the `ws` package (D3 zero-dep),
+a ~110-line RFC 6455 client `wsConnect()` was added to `src/ws-lite.js` (alongside the existing server),
+masking client frames and reassembling fragmented incoming frames (large CDP screenshot payloads).
+### Evidence
+Keeps "clone and `node …`" with no `npm install`; D3's revisit condition (client->server *HUD* messaging)
+is not met — this is dev-tooling, not a runtime dep of the HUD app. Validated rendering QHLAN on Node 18.
+### Revisit Conditions
+If the bidirectional HUD command path (B4) lands, re-evaluate consolidating client+server WS code.

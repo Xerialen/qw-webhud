@@ -2,6 +2,7 @@
 // mockup background; lets you drag/select/style elements and save/load the spec as JSON.
 import { Stage } from './render.js';
 import { ELEMENTS, PALETTE } from './elements.js';
+import { applyTheme, THEMES } from './theme.js';
 import { DEFAULT_SPEC, SAMPLE_STATE } from './specs.js';
 import { Feed } from './feed.js';
 
@@ -18,10 +19,26 @@ let spec = clone(DEFAULT_SPEC);
 let selectedId = null;
 let live = false;
 
+// rich themes bring their own element registry + editor palette (declared on the THEMES descriptor);
+// everything else uses the default registry/palette.
+const regFor = (sp) => THEMES[sp?.meta?.theme]?.registry || ELEMENTS;
+const paletteFor = (sp) => THEMES[sp?.meta?.theme]?.palette || PALETTE;
+
 // type-specific option editors: { key, label, kind, options? }
 const OPT_FIELDS = {
   bigstat: [{ key: 'kind', label: 'stat', kind: 'select', options: ['health', 'armor', 'ammo'] }],
-  killfeed: [{ key: 'keep', label: 'keep', kind: 'number', min: 1, max: 12, step: 1 }],
+  killfeed: [
+    { key: 'keep', label: 'keep', kind: 'number', min: 1, max: 12, step: 1 },
+    { key: 'align', label: 'align', kind: 'select', options: ['left', 'center', 'right'] },
+  ],
+  teaminfo: [{ key: 'align', label: 'align', kind: 'select', options: ['left', 'center', 'right'] }],
+  teamscore: [{ key: 'withClock', label: 'clock', kind: 'select', options: ['', 'true'] }],
+  ammocounts: [{ key: 'dir', label: 'dir', kind: 'select', options: ['row', 'col', 'grid'] }],
+  panel: [
+    { key: 'w', label: 'w (px)', kind: 'number', min: 0, max: 1920, step: 4 },
+    { key: 'h', label: 'h (px)', kind: 'number', min: 0, max: 1080, step: 4 },
+    { key: 'variant', label: 'variant', kind: 'select', options: ['bar', 'bare'] },
+  ],
   text: [{ key: 'text', label: 'text', kind: 'text' }],
   crosshair: [{ key: 'char', label: 'char', kind: 'text' }],
 };
@@ -33,6 +50,7 @@ const ANCHORS = [
 
 // ---- render / selection ----
 function render() {
+  applyTheme(spec);            // body theme class + webfont + theme CSS (shared with the overlay)
   stage.setSpec(spec);
   if (selectedId && !spec.elements.some(e => e.id === selectedId)) selectedId = null;
   stage.update(currentState());
@@ -42,19 +60,19 @@ function currentState() { return live ? (feed.getLatest() || SAMPLE_STATE) : SAM
 function elById(id) { return spec.elements.find(e => e.id === id); }
 
 function markSelected(id) {
-  for (const n of stage.root.querySelectorAll('.hel.sel')) n.classList.remove('sel');
+  for (const n of stage.root.querySelectorAll('.hel.sel, .hud-el.sel')) n.classList.remove('sel');
   const n = stage.getNode(id);
   if (n) n.classList.add('sel');
 }
 function select(id) { selectedId = id; markSelected(id); buildProps(); }
-function deselect() { selectedId = null; for (const n of stage.root.querySelectorAll('.hel.sel')) n.classList.remove('sel'); buildProps(); }
+function deselect() { selectedId = null; for (const n of stage.root.querySelectorAll('.hel.sel, .hud-el.sel')) n.classList.remove('sel'); buildProps(); }
 
 // ---- properties panel ----
 function buildProps() {
   const props = $('props');
   const el = elById(selectedId);
   if (!el) { props.innerHTML = `<div class="empty">Click an element to edit it.<br><br>Drag to move · arrow keys nudge<br>(<span class="kbd">Shift</span> = bigger steps)</div>`; return; }
-  const def = ELEMENTS[el.type] || {};
+  const def = regFor(spec)[el.type] || {};
   const rows = [];
   rows.push(`<h3>${el.id} <span class="muted">(${el.type})</span></h3>`);
   rows.push(row('show', `<input type="checkbox" data-k="show" ${el.show === false ? '' : 'checked'}>`));
@@ -97,7 +115,7 @@ function applyLayout(el) { const n = stage.getNode(el.id); if (n) stage.layout(n
 // ---- add / duplicate / delete ----
 function uniqueId(base) { let i = 1, id = base; while (spec.elements.some(e => e.id === id)) id = base + (++i); return id; }
 function addElement(type) {
-  const def = ELEMENTS[type]; if (!def) return;
+  const def = regFor(spec)[type]; if (!def) return;
   const el = { id: uniqueId(type), type, x: 50, y: 50, anchor: 'cc', scale: 1.0, z: 3, opts: clone(def.defaultOpts || {}) };
   spec.elements.push(el); render(); select(el.id);
 }
@@ -115,9 +133,11 @@ function removeEl(id) {
 // ---- drag ----
 let drag = null;
 $('stage').addEventListener('mousedown', (e) => {
-  const node = e.target.closest('.hel'); if (!node) { deselect(); return; }
+  const node = e.target.closest('.hel, .hud-el'); if (!node) { deselect(); return; }
   const id = node.dataset.id; select(id);
-  const el = elById(id); const rect = $('stage').getBoundingClientRect();
+  const el = elById(id);
+  const stageNode = $('stage').querySelector('.hud-stage') || $('stage');
+  const rect = stageNode.getBoundingClientRect();
   drag = { id, sx: e.clientX, sy: e.clientY, x0: el.x, y0: el.y, rw: rect.width, rh: rect.height };
   node.classList.add('dragging');
   e.preventDefault();
@@ -168,7 +188,7 @@ async function load() {
     if (r.ok) { spec = await r.json(); }
     else if (name === 'hub') { spec = clone(DEFAULT_SPEC); }
     else { status(`no spec "${name}"`, true); return; }
-    selectedId = null; applyBg(); render(); buildProps(); status(`loaded "${name}"`);
+    selectedId = null; refreshPalette(); applyBg(); render(); buildProps(); status(`loaded "${name}"`);
   } catch (err) { status('load failed: ' + err.message, true); }
 }
 function status(msg, err) { const s = $('status'); s.textContent = msg; s.style.color = err ? '#ff8080' : '#7fd08a'; }
@@ -198,8 +218,11 @@ $('btnLive').addEventListener('click', (e) => {
   if (!live) stage.update(SAMPLE_STATE);
 });
 
-// populate the add-element dropdown
-$('addType').innerHTML = PALETTE.map(p => `<option value="${p.type}">${p.label}</option>`).join('');
+// populate the add-element dropdown (the palette depends on the current spec's theme registry)
+function refreshPalette() {
+  $('addType').innerHTML = paletteFor(spec).map(p => `<option value="${p.type}">${p.label}</option>`).join('');
+}
+refreshPalette();
 
 // ---- boot ----
 const params = new URLSearchParams(location.search);

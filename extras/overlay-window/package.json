@@ -1,0 +1,13 @@
+{
+  "name": "qw-webhud-overlay-window",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Transparent, always-on-top, click-through overlay window that renders the qw-webhud overlay on top of a borderless ezQuake window — the no-OBS 'live, on top of the game' path from the README roadmap.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^42.4.1"
+  }
+}

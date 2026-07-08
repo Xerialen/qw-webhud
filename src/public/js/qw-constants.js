@@ -67,6 +67,24 @@ export function mmss(seconds) {
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 }
 
+// raw QW obituary line -> { killer, victim }; chat ("name: msg") / engine prints / suicides -> null.
+// Single source of truth for both the default and QHLAN killfeeds.
+export function parseKill(line) {
+  line = (line || '').trim();
+  if (!line || /^\S+:\s/.test(line)) return null;                       // chat "para: lost..."
+  let m = line.match(/^(.+?)\s+(?:was|were)\b.*?\bby\s+(.+?)[.!]?$/i);   // "VICTIM was ... by KILLER"
+  if (m) return { killer: m[2].trim(), victim: m[1].trim() };
+  m = line.match(/^(\S+)\b.*?\b([^\s']+)'s\b/);                         // "VICTIM <verb> KILLER's weapon"
+  if (m && m[1] !== m[2]) return { killer: m[2].trim(), victim: m[1].trim() };
+  return null;                                                          // suicide / unknown / noise
+}
+
+// events.messages[] -> deduped [{ killer, victim }] (collapse consecutive identical obituaries).
+export function parseKillfeed(messages = []) {
+  const kills = (messages || []).map(parseKill).filter(Boolean);
+  return kills.filter((k, i) => i === 0 || k.killer !== kills[i - 1].killer || k.victim !== kills[i - 1].victim);
+}
+
 // build an items bitmask from a weapon-id list + flags (used by the mock feed).
 export function makeItems(weaponIds = [], extra = {}) {
   let items = 0;

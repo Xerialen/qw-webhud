@@ -18,6 +18,7 @@ One zip — `qw-hud-bom-<spec>.zip` — containing:
 | `layout.json` | the HUD spec: every element's `type, x, y%, anchor, scale, z, opts` |
 | `canvas.txt` | resolution model — design space (stage %, base 640×360) + render target 1920×1080 |
 | `screenshot.png` | the whole HUD, full-res 1920×1080, composited over a 3D backdrop |
+| `screenshot-2560.png` | the same HUD at 2560×1440 — confirms the layout holds at stream resolution (where the fixed-1080 stage scale ≠ 1) |
 | `bom.md` | the **Bill of Materials**: what a QW HUD is + every component + the live data behind it + the redesign brief (the [HUD-BOM.md](HUD-BOM.md) reference, then this layout's manifest and task) |
 
 ## Run
@@ -40,6 +41,17 @@ node .claude/skills/qw-hud-bom/scripts/make-brief.mjs [spec] [outDir]
 
 After it runs: **read `bom.md` and view `screenshot.png`**, then hand the zip (or `bom.md` + the screenshot)
 to the design tool and ask it to redesign the elements.
+
+## Capture note — HUD-over-Quake images
+
+This headless render **over the `_clean3d` backdrop** is the canonical way to show the HUD over a Quake
+scene — the layout is correct and reproducible. Do **not** use a live desktop grab of the transparent
+overlay window (`extras/overlay-window/shoot-desktop.ps1`) to judge layout: a GDI capture of a transparent,
+always-on-top window **distorts the HUD position** (it reads off-centre when the render is actually fine).
+The desktop grab is only for confirming the overlay composites *on top of* the running game. Validate HUD
+**layout** headlessly at the target resolution (`screenshot-2560.png`, or `scripts/shoot.mjs … 2560 1440`) —
+at 1920×1080 the fixed-1080 stage scale is exactly 1, so centring is trivially correct and res-dependent
+bugs never surface. (See vault `headless-hud-capture`.)
 
 ## Reference
 

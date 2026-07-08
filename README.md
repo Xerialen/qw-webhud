@@ -33,6 +33,18 @@ for status.
 
 ## Quick start
 
+Requires **Node.js >= 18** — that's it. There are **no runtime dependencies**, so there is no
+`npm install` step.
+
+```bash
+# clone, then bootstrap (verifies Node and starts the mock bridge)
+./bootstrap.sh          # Linux / macOS / WSL2
+./bootstrap.ps1         # Windows PowerShell
+#   add --check / -Check to verify the environment without starting anything
+```
+
+Or run it directly:
+
 ```bash
 # 1. run the bridge with the synthetic mock feed (no engine needed)
 node src/bridge.js --mock
@@ -46,12 +58,42 @@ node src/bridge.js --mock
 With the real engine instead of `--mock`: run `node src/bridge.js`, launch the ezQuake fork built
 with `cl_hudexport`, and set `cl_hudexport 1` in-game (port via `cl_hudexport_port`, default 27999).
 
+### Configuration (capture / overlay helper scripts)
+
+The bridge and web app need no configuration. The optional helper scripts under `scripts/` and
+`extras/overlay-window/` that drive a *real* ezQuake for demoshots/casting read these environment
+variables so no machine-specific paths are hard-coded — set them, or pass the matching parameter:
+
+| Variable | Used by | Meaning |
+| --- | --- | --- |
+| `QW_HUD_LAB` | capture-obs, prove-hudexport, play-quake | ezQuake "lab" client dir (holds `qw/` and the exe). Defaults to `$HOME/qw-hud-lab`. |
+| `QW_HUD_EXE` | play-quake | The `cl_hudexport` ezQuake binary. Defaults to `$QW_HUD_LAB/ezquake-hud.exe`. |
+| `QW_DEMO` | capture-obs, prove-hudexport, play-quake | Path to the `.mvd`/`.qwd` demo to play. |
+| `QW_OVERLAY_SHOT` | shoot-desktop | Output PNG for the desktop grab. Defaults to `$HOME/qw-overlay-shot.png`. |
+
+`extras/deploy/qw-webhud.service` is a systemd **template** — edit `User=` and `WorkingDirectory=`
+before installing.
+
 ### Using the overlay over the game / in OBS
 - **OBS:** add a Browser source -> `http://localhost:7777/overlay.html`, sized to your canvas. The
   page background is transparent, so only the HUD composits over the game capture.
 - **Live, on top of the game:** run the game borderless-windowed and put a transparent, always-on-top
   browser window (e.g. a dedicated Chrome `--app` window) over it. A packaged transparent overlay
   window is a planned convenience (see the roadmap).
+
+## Themes
+
+A spec may set `meta.theme` to restyle the HUD. A theme is `body.<cls>` CSS + an optional webfont +
+(for richer themes) its own element catalog, applied by `js/theme.js` for both the overlay and the
+editor. Built-in themes:
+
+- **minecraft** / **bladerunner** — CSS reskins of the default elements (`milton-mc`, `milton-br`).
+- **qhlan** — the full QHLAN redesign (glass panels, condensed display type, brand-green accent).
+  Three drop-in layouts — `specs/qhlan-hubrail.json`, `qhlan-lowerthird.json`, `qhlan-cockpit.json`
+  (from a Claude Design handoff built off the `qw-hud-bom` export). It uses its own element catalog
+  (`js/qhlan-elements.js`) on a fixed 1920×1080 stage scaled as a whole, so view it with e.g.
+  `overlay.html?spec=qhlan-hubrail`. Colour stays bound to QW's data semantics; the accent tints
+  chrome only.
 
 ## Layout
 
@@ -69,10 +111,15 @@ src/
       qw-constants.js  QW item/weapon bitmask constants + derivations (shared by web + mock)
       feed.js          WebSocket client (keeps latest snapshot, fps/age meters)
       render.js        the Stage: positions elements in %-space, scales to the window
-      elements.js      the element catalog (health/armor/ammo/score/teaminfo/...)
+                       (+ a fixed-1080 mode for themed specs that need pixel layout)
+      elements.js      the default element catalog (health/armor/ammo/score/teaminfo/...)
+      qhlan-elements.js the QHLAN-theme element catalog (glass renderers, fixed-1080 layout)
+      theme.js         per-spec theming (body class + webfont + theme CSS), shared overlay+editor
       specs.js         the built-in "hub" preset + a frozen sample state for the editor
       editor.js        drag / select / properties / save-load / background / live-preview
+    css/qhlan.css      QHLAN theme styling (scoped under body.qhlan)
     specs/hub.json     the default saved HUD-spec
+    specs/qhlan-*.json QHLAN-themed layouts: hubrail / lowerthird / cockpit
 scripts/wscheck.mjs    WebSocket smoke test
 ```
 

@@ -20,7 +20,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Project-scoped skill: it lives at <repo>/.claude/skills/qw-hud-bom/scripts, so the qw-webhud repo
 // root is four levels up. QW_WEBHUD_DIR overrides (e.g. if this skill is copied elsewhere).
 const REPO = process.env.QW_WEBHUD_DIR || path.resolve(__dirname, '..', '..', '..', '..');
-const CHROME = process.env.CHROME || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+// Reuse the repo's cross-platform helpers (resolved via REPO so QW_WEBHUD_DIR keeps working).
+const { resolveChrome, profileDir } = await import(pathToFileURL(path.join(REPO, 'scripts', '_chrome.mjs')).href);
+const { wsConnect } = await import(pathToFileURL(path.join(REPO, 'src', 'ws-lite.js')).href);
+const CHROME = resolveChrome();
+const SANDBOX = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : [];
 // Default to an ISOLATED port pair (not the app's 7777/27999) so a live engine feed can't hijack the
 // capture: on its own port nothing competes, so the crafted snapshot below wins and EVERY component is
 // populated (deterministic, reproducible brief). To instead capture a live HUD, point at the running
@@ -58,13 +62,13 @@ async function up() {
   catch { return false; }
 }
 
-// connect to the page target's debugger ws, navigate, wait, capture 1920x1080, return a PNG buffer.
-async function capture(url, waitMs = 3800) {
-  const ud = path.join(os.tmpdir(), 'qwbom-cdp-' + process.pid);
+// connect to the page target's debugger ws, navigate, wait, capture width x height, return a PNG buffer.
+async function capture(url, waitMs = 3800, width = 1920, height = 1080) {
+  const ud = profileDir('qwbom-cdp-' + process.pid + '-' + width);
   const chrome = spawn(CHROME, [
-    '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    '--headless=new', '--disable-gpu', ...SANDBOX, '--no-first-run', '--no-default-browser-check',
     `--user-data-dir=${ud}`, `--remote-debugging-port=${CDP_PORT}`,
-    '--force-device-scale-factor=1', '--window-size=1920,1080', '--hide-scrollbars', 'about:blank',
+    '--force-device-scale-factor=1', `--window-size=${width},${height}`, '--hide-scrollbars', 'about:blank',
   ], { stdio: 'ignore' });
   try {
     let pageWs = null;
@@ -78,7 +82,7 @@ async function capture(url, waitMs = 3800) {
     }
     if (!pageWs) throw new Error('chrome devtools not reachable');
 
-    const ws = new WebSocket(pageWs);
+    const ws = wsConnect(pageWs);
     await new Promise((res, rej) => {
       const t = setTimeout(() => rej(new Error('cdp ws open timeout')), 10000);
       ws.onopen = () => { clearTimeout(t); res(); };
@@ -98,10 +102,10 @@ async function capture(url, waitMs = 3800) {
     });
 
     await cmd('Page.enable');
-    await cmd('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
+    await cmd('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
     await cmd('Page.navigate', { url });
     await sleep(waitMs); // load + /api/snapshot fetch + first WS frame + render
-    const shot = await cmd('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1920, height: 1080, scale: 1 }, captureBeyondViewport: true });
+    const shot = await cmd('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width, height, scale: 1 }, captureBeyondViewport: true });
     ws.close();
     if (!shot.result?.data) throw new Error('captureScreenshot returned no data');
     return Buffer.from(shot.result.data, 'base64');
@@ -158,7 +162,8 @@ function taskText(spec) {
     'You are redesigning the QuakeWorld spectator HUD described above. You have:',
     '- **layout.json** — the exact current element layout (the manifest above).',
     `- **canvas.txt** — the coordinate space (design ${bw}x${bh}, render 1920x1080, 16:9).`,
-    '- **screenshot.png** — how the HUD looks right now, composited over the 3D view.',
+    '- **screenshot.png** — how the HUD looks right now, composited over the 3D view (1920x1080).',
+    '- **screenshot-2560.png** — the same HUD at 2560x1440, to confirm the layout holds at stream resolution.',
     '',
     'Redesign the elements for clarity, visual hierarchy, and broadcast readability. You MAY change',
     'position, grouping, scale, typography, and colour treatment, and propose new arrangements.',
@@ -241,10 +246,13 @@ async function main() {
   await sleep(500);
 
   try {
-    // 5. capture the whole HUD over the 3D backdrop
+    // 5. capture the whole HUD over the 3D backdrop — at the 1920x1080 design target AND at 2560x1440
+    //    (a non-unit stage scale, so resolution-dependent layout/centring bugs surface in the brief).
     const url = `http://localhost:${HTTP_PORT}/overlay.html?spec=${encodeURIComponent(SPEC)}&bg=/_clean3d.jpg`;
     log(`capturing ${url}`);
-    const png = await capture(url);
+    const png = await capture(url, 3800, 1920, 1080);
+    log('capturing again at 2560x1440 (layout check)');
+    const png2560 = await capture(url, 3800, 2560, 1440);
 
     // 6. stage the four artefacts
     const stage = path.join(os.tmpdir(), 'qwbom-stage-' + process.pid);
@@ -253,6 +261,7 @@ async function main() {
     fs.writeFileSync(path.join(stage, 'layout.json'), JSON.stringify(spec, null, 2));
     fs.writeFileSync(path.join(stage, 'canvas.txt'), canvasText(spec));
     fs.writeFileSync(path.join(stage, 'screenshot.png'), png);
+    fs.writeFileSync(path.join(stage, 'screenshot-2560.png'), png2560);
     const bomRef = fs.readFileSync(path.join(__dirname, '..', 'HUD-BOM.md'), 'utf8');
     fs.writeFileSync(path.join(stage, 'bom.md'),
       `${bomRef}\n\n---\n\n${manifest(spec)}\n${taskText(spec)}`);
@@ -269,7 +278,7 @@ async function main() {
 
     const kb = (fs.statSync(outZip).size / 1024).toFixed(0);
     log(`OK  ${outZip}  (${kb} KB)`);
-    log('contents: layout.json, canvas.txt, screenshot.png, bom.md');
+    log('contents: layout.json, canvas.txt, screenshot.png, screenshot-2560.png, bom.md');
     console.log(outZip);
   } finally {
     clearInterval(pump); try { sock.close(); } catch {}

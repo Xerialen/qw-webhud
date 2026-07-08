@@ -1,5 +1,40 @@
 # Findings Log
 
+## 2026-07-08 — PR #2 review fixes validated locally
+
+### Result
+Addressed the six unresolved Gemini review threads on PR #2:
+- Guarded repeated PowerShell `Add-Type` calls in `extras/overlay-window/play-quake.ps1` and
+  `extras/overlay-window/shoot-desktop.ps1`.
+- Made editor drag math use the scaled `.hud-stage` rect when a fixed-1080 theme is active.
+- Hardened QHLAN health/teaminfo rendering against nullish state entries.
+- Logged a warning if Electron cannot register the `Ctrl+Alt+Q` panic-close shortcut.
+- Added a zero-dependency `npm test` entrypoint with regression coverage for the review fixes.
+
+### Evidence
+- `npm test`: 4 tests passed (`tests/review-fixes.test.mjs`).
+- PowerShell parse check: `play-quake.ps1` and `shoot-desktop.ps1` parsed successfully via
+  `[scriptblock]::Create(...)`.
+- `node --check extras/overlay-window/main.js`: passed.
+- GitHub check annotations for PR #2 all report the same infrastructure blocker:
+  "recent account payments have failed or your spending limit needs to be increased"; jobs never
+  reached a runner (`runner_id: 0`, no steps/logs).
+- Push/update is separately blocked by repository ruleset `Protection` (id `18642382`): it targets
+  `~ALL` branches, requires pull requests and verified signatures, has no bypass actors, and reports
+  `current_user_can_bypass: never`. A temporary `codex/pr2-review-fixes` ref was created at the PR
+  head (`fd0044e`) before this was discovered; the same ruleset also blocks deleting that empty ref.
+
+### Confidence
+High on the code fixes and local test coverage. GitHub CI cannot turn green until the billing/spending
+limit issue is fixed outside the repo. Remote publication also needs the repository ruleset adjusted
+or a bypass workflow/actor configured.
+
+### Follow-up
+Unblock the repo rules first (for example: stop applying the PR rule to `~ALL` branches, add an
+appropriate bypass actor, or use a trusted workflow/app path that can create verified commits), then
+publish the local fix commit/patch. Rerun PR #2 checks after GitHub Actions billing/spending is
+restored. The PR still needs the independent cross-model review gate before merge.
+
 ## 2026-06-21 — Web pipeline works end to end (mock feed)
 
 ### Result

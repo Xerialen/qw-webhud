@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "name": "qhlan-cockpit",
+    "theme": "qhlan",
+    "baseW": 640,
+    "baseH": 360,
+    "notes": "QHLAN edition — Corner Cockpit. Vitals pushed into a bottom-left glass module (pools + weapons over the armor/health/ammo numbers) so the centre of frame stays clear for the action. A centre-bottom comms stack (speed / powerups / POV). Score + clock top-centre, kill feed and team panel right. The 'vitalsbox' panel is a QHLAN-glass backing (catalog extension)."
+  },
+  "elements": [
+    { "id": "score",       "type": "teamscore",   "x": 50,   "y": 5,    "anchor": "ct", "scale": 1,    "z": 6 },
+    { "id": "clock",       "type": "gameclock",   "x": 50,   "y": 12.5, "anchor": "ct", "scale": 1,    "z": 6 },
+    { "id": "killfeed",    "type": "killfeed",    "x": 98,   "y": 6,    "anchor": "rt", "scale": 1,    "z": 5, "opts": { "align": "right", "keep": 6 } },
+    { "id": "teaminfo",    "type": "teaminfo",    "x": 98,   "y": 40,   "anchor": "rt", "scale": 1,    "z": 5, "opts": { "align": "right" } },
+    { "id": "centerprint", "type": "centerprint", "x": 50,   "y": 30,   "anchor": "cc", "scale": 1,    "z": 8 },
+    { "id": "vitalsbox",   "type": "panel",       "x": 1.5,  "y": 98.5, "anchor": "lb", "scale": 1,    "z": 2, "opts": { "w": 548, "h": 322, "variant": "bar" } },
+    { "id": "ammocounts",  "type": "ammocounts",  "x": 3.5,  "y": 70,   "anchor": "lb", "scale": 0.82, "z": 4, "opts": { "dir": "row" } },
+    { "id": "weapons",     "type": "weapons",     "x": 3.5,  "y": 77,   "anchor": "lb", "scale": 0.82, "z": 4 },
+    { "id": "armor",       "type": "bigstat",     "x": 5,    "y": 96,   "anchor": "lb", "scale": 0.8,  "z": 4, "opts": { "kind": "armor" } },
+    { "id": "health",      "type": "bigstat",     "x": 14.5, "y": 96,   "anchor": "lb", "scale": 0.86, "z": 4, "opts": { "kind": "health" } },
+    { "id": "ammo",        "type": "bigstat",     "x": 24,   "y": 96,   "anchor": "lb", "scale": 0.8,  "z": 4, "opts": { "kind": "ammo" } },
+    { "id": "speed",       "type": "speed",       "x": 50,   "y": 82,   "anchor": "cb", "scale": 1,    "z": 4 },
+    { "id": "powerups",    "type": "powerups",    "x": 50,   "y": 89,   "anchor": "cb", "scale": 1,    "z": 4 },
+    { "id": "tracking",    "type": "tracking",    "x": 50,   "y": 96,   "anchor": "cb", "scale": 1,    "z": 4 }
+  ]
+}
