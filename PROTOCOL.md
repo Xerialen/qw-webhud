@@ -78,7 +78,9 @@ Ports override via env: `HUD_UDP_PORT`, `HUD_HTTP_PORT`. (ezQuake side: `cl_hude
   ],
 
   "events": {                   // optional
-    "killfeed": [ { "t": 310.1, "killer": "X-ray", "victim": "enemy", "weapon": "rl" } ],
+    "messages": [               // raw QW console lines (obituaries + chat), newest first; the browser
+      "enemy was rocketed by X-ray"   // parses obituaries into the killfeed (qw-constants.js parseKill)
+    ],
     "centerprint": "",
     "last_damage": { "health": 0, "armor": 0, "at": -100 } // for a damage-flash effect
   }
