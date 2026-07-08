@@ -40,6 +40,17 @@ export function armorType(items) {
 
 export const ARMOR_COLORS = { 0: '#888', 1: '#2ecc40', 2: '#ffcc00', 3: '#ff4136' };
 
+// QuakeWorld player top-colour ramp 0..13 (approx of the quake palette). Shared by both element
+// catalogs; teamColor maps a colour index to its swatch (fallback guards a bad/negative index).
+export const QW_PALETTE = [
+  '#d8d8d8', '#a86a32', '#4f6f9f', '#3f9f4f', '#cf3f3f', '#bf8f3f',
+  '#9f5fcf', '#cf8f5f', '#6f9fdf', '#dfdf5f', '#7fdf7f', '#df6f9f', '#5fdfdf', '#ff9f2f',
+];
+export const teamColor = (i) => QW_PALETTE[(i | 0) % 14] || '#d8d8d8';
+
+// HTML-escape for text interpolated into element innerHTML. Shared by both element catalogs.
+export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
 // weapon ids owned, in display order, from the items bitmask.
 export function ownedWeapons(items) {
   return WEAPONS.filter(w => items & w.bit).map(w => w.id);

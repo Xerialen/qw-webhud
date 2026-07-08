@@ -34,8 +34,6 @@ export function start({ port = 27999, host = '127.0.0.1', hz = 60 } = {}) {
     { slot: 3, name: 'draqz', loc: 'ya',   health: 47,  armor: 60,  armortype: 1, weapon: IT.SUPER_SHOTGUN,   ammo: 3  },
   ];
   const locs = ['rl', 'quad', 'ya', 'ra', 'pent', 'mh', 'gl', 'sng', 'big', 'low', 'tele'];
-  const killfeed = [];
-  const WEAPON_NAMES = { rl: 'rl', lg: 'lg', sg: 'sg', ssg: 'ssg', ng: 'ng' };
 
   const WEAPON_AMMO = { rl: 'rockets', lg: 'cells', sg: 'shells', ssg: 'shells', ng: 'nails' };
 
@@ -64,8 +62,6 @@ export function start({ port = 27999, host = '127.0.0.1', hz = 60 } = {}) {
         health = clamp(health + choice([15, 25, 100]), 0, 250);
       } else if (roll < 0.9) { // frag
         frags++; teams[0].frags++;
-        killfeed.unshift({ t, killer: 'X-ray', victim: choice(['mix', 'GoF', 'enemy', 'low']), weapon: WEAPON_NAMES[weaponId] || 'rl' });
-        if (killfeed.length > 5) killfeed.length = 5;
       } else if (roll < 0.96) { // quad
         quadUntil = t + 30; centerprint = 'QUAD DAMAGE'; centerUntil = t + 2;
       } else { // weapon swap
@@ -114,7 +110,6 @@ export function start({ port = 27999, host = '127.0.0.1', hz = 60 } = {}) {
       teams: teams.map(x => ({ ...x })),
       teaminfo: mates.map(m => ({ ...m, stale: false })),
       events: {
-        killfeed: killfeed.map(k => ({ ...k })),
         centerprint,
         last_damage: { ...lastDamage },
       },
