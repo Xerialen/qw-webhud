@@ -41,28 +41,45 @@ for status.
 
 ## Getting started
 
-You need **Node.js >= 18** — that's it. There are **no runtime dependencies**, so there is no
-`npm install` step for the core app. Pick the path that matches what you want to do.
+You need **Node.js >= 18** and **git** — that's it. There are **no runtime dependencies** (the
+WebSocket server is hand-rolled), so there is **no `npm install`** step for the app.
 
-### Path 1 — try it / edit the HUD (no game needed)
+**Everyone starts with Path 1.** It runs the entire HUD off a built-in *mock feed*, so you need
+nothing but Node — no Quake, no engine build. Paths 2 and 3 add a real game and require a special
+ezQuake build (`cl_hudexport`) that is **not published yet** (see
+[The ezQuake side](#the-ezquake-side--cl_hudexport)); skip them for now if you just want to see it run.
 
-Everything runs off a synthetic **mock feed**, so you can design and preview the HUD without Quake at
-all.
+Want to contribute code rather than just run it? See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+### Path 1 — see it running in ~60 seconds (no game needed)
 
 ```bash
-# clone, then bootstrap (verifies Node and starts the mock bridge)
+git clone https://github.com/Xerialen/qw-webhud.git
+cd qw-webhud
 ./bootstrap.sh          # Linux / macOS / WSL2
-./bootstrap.ps1         # Windows PowerShell
-#   add --check / -Check to verify the environment without starting anything
+#   Windows PowerShell:        ./bootstrap.ps1
+#   verify only, don't start:  ./bootstrap.sh --check      ( -Check on PowerShell )
 ```
 
-Or run it directly:
+No install step — the bootstrap just checks Node and starts the bridge on **http://localhost:7777**.
+Then open:
+
+- **overlay** → <http://localhost:7777/overlay.html?bg=check&dbg>
+- **editor** → <http://localhost:7777/editor.html>
+
+**You should see a live HUD** — health / armour / ammo, a weapon row, a score bar, a teammate panel,
+and a scrolling kill feed — all animating from synthetic data. That's success. (`bg=check` draws a
+checkerboard so you can see the otherwise-transparent overlay; `dbg` shows fps/latency — press **d**
+to toggle it.)
+
+> **Windows:** if `./bootstrap.ps1` reports *"running scripts is disabled on this system"*, run
+> `powershell -ExecutionPolicy Bypass -File .\bootstrap.ps1` instead — or skip the script entirely and
+> start the app by hand (below).
+
+Prefer to start it by hand (any OS, no script)?
 
 ```bash
-node src/bridge.js --mock
-#   editor:  http://localhost:7777/editor.html
-#   overlay: http://localhost:7777/overlay.html?bg=check&dbg
-#            (bg=check = checkerboard so you can see the transparent overlay; dbg = fps/latency)
+node src/bridge.js --mock   # then open the two URLs above
 ```
 
 ### Path 2 — stream / cast with the live HUD ✅ intended use
@@ -191,8 +208,9 @@ build. See [`docs/current-stage.md`](docs/current-stage.md).
 
 ## Contributing & license
 
-Contributions are welcome — see [`AGENTS.md`](AGENTS.md) for the project contract and
-[`docs/current-stage.md`](docs/current-stage.md) for the re-entry point. This repository follows the
+Contributions are welcome — **[`CONTRIBUTING.md`](CONTRIBUTING.md)** is the short human guide (setup,
+tests, PR flow). For the deeper agent contract see [`AGENTS.md`](AGENTS.md) and
+[`docs/current-stage.md`](docs/current-stage.md); this repository follows the
 [ai-project-template](https://github.com/Xerialen/ai-project-template) conventions.
 
 Licensed under the [MIT License](LICENSE).
