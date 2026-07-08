@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   markdown-check:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Check out
         uses: actions/checkout@v4
