@@ -47,17 +47,12 @@ export const SAMPLE_STATE = {
     { slot: 3, name: 'draqz',  loc: 'ya',   health: 47,  armor: 60,  armortype: 1, weapon: makeItems(['ssg']), ammo: 3 },
   ],
   events: {
-    // raw QW obituary lines (what the engine ships + the killfeed elements parse). The structured
-    // killfeed[] below is kept for any consumer that wants it pre-parsed.
+    // raw QW obituary lines — what the engine ships and the killfeed elements parse.
     messages: [
       'mix was railed by X-ray',
       'low was zapped by sail',
       'volkov was melted by milton',
       'draqz was gibbed by lakso',
-    ],
-    killfeed: [
-      { t: 0, killer: 'X-ray', victim: 'mix', weapon: 'rl' },
-      { t: 0, killer: 'sail', victim: 'low', weapon: 'lg' },
     ],
     centerprint: '', last_damage: { health: 0, armor: 0, at: -100 },
   },

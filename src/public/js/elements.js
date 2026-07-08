@@ -3,16 +3,8 @@
 // One source of truth for both the overlay and the editor palette.
 import {
   armorType, ARMOR_COLORS, ownedWeapons, activeWeaponId, powerups, mmss, WEAPONS, parseKillfeed,
+  teamColor, esc,
 } from './qw-constants.js';
-
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-// QuakeWorld player colours 0..13 (approx of the quake palette top-colour ramps).
-const QW_PALETTE = [
-  '#d8d8d8', '#a86a32', '#4f6f9f', '#3f9f4f', '#cf3f3f', '#bf8f3f',
-  '#9f5fcf', '#cf8f5f', '#6f9fdf', '#dfdf5f', '#7fdf7f', '#df6f9f', '#5fdfdf', '#ff9f2f',
-];
-const teamColor = (i) => QW_PALETTE[(i | 0) % 14] || '#d8d8d8';
 
 const AMMO_COLORS = { shells: '#ffd24a', nails: '#9fd0ff', rockets: '#ff7a4a', cells: '#c79fff' };
 
