@@ -2,7 +2,7 @@
 // defaultOpts, render(node, el, state) }. `size` x el.scale x stage-height = the element font-size.
 // One source of truth for both the overlay and the editor palette.
 import {
-  armorType, ARMOR_COLORS, ownedWeapons, activeWeaponId, powerups, mmss, WEAPONS,
+  armorType, ARMOR_COLORS, ownedWeapons, activeWeaponId, powerups, mmss, WEAPONS, parseKillfeed,
 } from './qw-constants.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -154,19 +154,9 @@ export const ELEMENTS = {
     size: 2.2,
     defaultOpts: { keep: 5 },
     render(node, el, state) {
-      // engine ships events.messages as raw QW obituaries + chat; parse the kills into compact
-      // "killer -> victim" (r_tracker style). Non-kills (chat "name: msg", engine prints) yield null.
-      const parseKill = (line) => {
-        line = (line || '').trim();
-        if (!line || /^\S+:\s/.test(line)) return null;                       // chat "para: lost..."
-        let m = line.match(/^(.+?)\s+(?:was|were)\b.*?\bby\s+(.+?)[.!]?$/i);    // "VICTIM was ... by KILLER"
-        if (m) return { killer: m[2].trim(), victim: m[1].trim() };
-        m = line.match(/^(\S+)\b.*?\b([^\s']+)'s\b/);                          // "VICTIM <verb> KILLER's weapon"
-        if (m && m[1] !== m[2]) return { killer: m[2].trim(), victim: m[1].trim() };
-        return null;                                                          // suicide / unknown / noise
-      };
-      let kills = (state?.events?.messages || []).map(parseKill).filter(Boolean);
-      kills = kills.filter((k, i) => i === 0 || k.killer !== kills[i - 1].killer || k.victim !== kills[i - 1].victim);
+      // engine ships events.messages as raw QW obituaries + chat; parse into compact
+      // "killer -> victim" (r_tracker style) via the shared helper in qw-constants.js.
+      const kills = parseKillfeed(state?.events?.messages);
       const keep = el.opts?.keep ?? 5;
       node.innerHTML = kills.slice(0, keep).map(k =>
         `<div class="kf-row"><span class="kf-k">${esc(k.killer)}</span> <span class="kf-w">»</span> <span class="kf-v">${esc(k.victim)}</span></div>`

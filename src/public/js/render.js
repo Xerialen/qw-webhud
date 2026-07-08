@@ -8,11 +8,7 @@
 //     as a whole (transform: scale), with each element positioned + transform-scaled like the
 //     design's reference renderer, so fixed-px theme CSS is resolution-independent.
 import { ELEMENTS } from './elements.js';
-import { QHLAN_ELEMENTS } from './qhlan-elements.js';
 import { THEMES } from './theme.js';
-
-// themes whose elements come from a non-default registry (and which render in fixed-1080 mode).
-const THEMED_REGISTRY = { qhlan: QHLAN_ELEMENTS };
 
 // Anchor is order-independent: l/r set the X axis, t/b set the Y axis, c (or an unset axis)
 // means centred. So 'rt', 'tr', 'cr', 'rc', 'ct', 'cb', 'cc' all resolve correctly.
@@ -65,7 +61,7 @@ export class Stage {
   setSpec(spec) {
     this.spec = spec;
     const theme = spec?.meta?.theme;
-    this.reg = THEMED_REGISTRY[theme] || ELEMENTS;
+    this.reg = THEMES[theme]?.registry || ELEMENTS;
     this.fixed = !!(theme && THEMES[theme]?.fixedStage);
     this.root.innerHTML = '';
     this.nodes.clear();

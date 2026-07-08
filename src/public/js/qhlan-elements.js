@@ -11,6 +11,7 @@
 // the actual colours via classes + a few inline CSS vars (--tc, var(--armor-*)).
 import {
   armorType, ownedWeapons, activeWeaponId, powerups as powerupBits, WEAPONS,
+  mmss, parseKillfeed,
 } from './qw-constants.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -36,33 +37,26 @@ const healthClass = (h) => {
   return v <= 25 ? 'v-crit' : v <= 50 ? 'v-warn' : 'v-white';
 };
 const armorTierName = (t) => (t === 3 ? 'red' : t === 2 ? 'yellow' : 'green'); // 1/0 -> green
-const mmss = (s) => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); };
 
-// match clock as the design reads it: remaining when counting down, else elapsed.
+// match clock. When a timelimit is known we report time REMAINING (so the "TIME LEFT" caption is
+// truthful in live play and during the pre-game countdown); with no timelimit we fall back to
+// elapsed. `.remaining` lets the caption say TIME LEFT vs TIME. Uses the shared floor-based mmss.
 function matchClock(state) {
-  const m = state?.match; if (!m) return 0;
-  let secs = m.gametime || 0;
-  if (m.countdown && m.timelimit) secs = Math.max(0, m.timelimit - secs);
-  return secs;
+  const m = state?.match; if (!m) return { secs: 0, remaining: false };
+  const elapsed = Math.max(0, m.gametime || 0);
+  if (m.timelimit > 0) return { secs: Math.max(0, m.timelimit - elapsed), remaining: true };
+  return { secs: elapsed, remaining: false };
 }
 
-// active weapon's pool + ammo count + abbreviation, from the STAT_ACTIVEWEAPON bit.
+// active weapon's pool + ammo count + abbreviation, from the STAT_ACTIVEWEAPON bit. Look the weapon
+// up in the FULL registry (not STRIP) so the axe resolves to itself with no pool — otherwise it
+// wrongly falls back to the shells count under a blank tag. pool === null => weapon holds no ammo.
 function activeAmmo(me) {
   const id = activeWeaponId(me.weapon);
-  const w = STRIP.find(x => x.id === id);
-  const pool = w?.ammo || 'shells';
-  return { pool, count: (me.ammo?.[pool]) | 0, ab: w?.label || '' };
-}
-
-// raw QW obituary line -> { killer, victim } (same parser as elements.js killfeed); chat / prints -> null.
-function parseKill(line) {
-  line = (line || '').trim();
-  if (!line || /^\S+:\s/.test(line)) return null;
-  let m = line.match(/^(.+?)\s+(?:was|were)\b.*?\bby\s+(.+?)[.!]?$/i);
-  if (m) return { killer: m[2].trim(), victim: m[1].trim() };
-  m = line.match(/^(\S+)\b.*?\b([^\s']+)'s\b/);
-  if (m && m[1] !== m[2]) return { killer: m[2].trim(), victim: m[1].trim() };
-  return null;
+  const w = WEAPONS.find(x => x.id === id);
+  const pool = w?.ammo || null;
+  const ab = (w?.label || '').toUpperCase();
+  return { pool, count: pool ? ((me.ammo?.[pool]) | 0) : null, ab };
 }
 
 export const QHLAN_ELEMENTS = {
@@ -91,12 +85,21 @@ export const QHLAN_ELEMENTS = {
           `</div>`;
       } else {
         const a = activeAmmo(me);
-        node.innerHTML =
-          `<div class="hp bigstat bigstat--ammo">` +
-            `<div class="bigstat__num v-white">${a.count}</div>` +
-            `<div class="bigstat__lbl"><b>${esc(a.ab)}</b><span style="margin:0 .35em;color:var(--t4)">·</span>` +
-              `<span style="color:${POOL_COLOR[a.pool]}">${POOL_NAME[a.pool]}</span></div>` +
-          `</div>`;
+        if (!a.pool) {
+          // axe (or any ammo-less weapon): no pool to show — render a dash, not a stray shells count.
+          node.innerHTML =
+            `<div class="hp bigstat bigstat--ammo">` +
+              `<div class="bigstat__num v-white">&#8211;</div>` +
+              `<div class="bigstat__lbl"><b>${esc(a.ab)}</b></div>` +
+            `</div>`;
+        } else {
+          node.innerHTML =
+            `<div class="hp bigstat bigstat--ammo">` +
+              `<div class="bigstat__num v-white">${a.count}</div>` +
+              `<div class="bigstat__lbl"><b>${esc(a.ab)}</b><span style="margin:0 .35em;color:var(--t4)">·</span>` +
+                `<span style="color:${POOL_COLOR[a.pool]}">${POOL_NAME[a.pool]}</span></div>` +
+            `</div>`;
+        }
       }
     },
   },
@@ -172,14 +175,15 @@ export const QHLAN_ELEMENTS = {
       };
       const A = teams[0], B = teams[1];
       if (B) {
-        const aLead = (A.frags | 0) >= (B.frags | 0);
-        const clock = withClock ? `<span class="score__clock">${mmss(matchClock(state))}</span>` : '';
+        const af = A.frags | 0, bf = B.frags | 0;
+        const aLead = af > bf, bLead = bf > af;   // an exact tie leads neither side
+        const clock = withClock ? `<span class="score__clock">${mmss(matchClock(state).secs)}</span>` : '';
         node.innerHTML =
           `<div class="hp score">` +
             cell(A, 'left') +
-            `<span class="score__f${aLead ? ' is-lead' : ''}">${A.frags | 0}</span>` +
+            `<span class="score__f${aLead ? ' is-lead' : ''}">${af}</span>` +
             `<span class="score__sep">:</span>` +
-            `<span class="score__f${!aLead ? ' is-lead' : ''}">${B.frags | 0}</span>` +
+            `<span class="score__f${bLead ? ' is-lead' : ''}">${bf}</span>` +
             cell(B, 'right') + clock +
           `</div>`;
       } else {
@@ -195,10 +199,11 @@ export const QHLAN_ELEMENTS = {
     render(node, el, state) {
       const m = state?.match; if (!m) { node.innerHTML = ''; return; }
       const map = (m.map || '').toUpperCase();
+      const mc = matchClock(state);
       node.innerHTML =
         `<div class="hp clock">` +
-          `<span class="clock__t">${mmss(matchClock(state))}</span>` +
-          `<span class="clock__k">${map ? `<b>${esc(map)}</b> · ` : ''}TIME LEFT</span>` +
+          `<span class="clock__t">${mmss(mc.secs)}</span>` +
+          `<span class="clock__k">${map ? `<b>${esc(map)}</b> · ` : ''}${mc.remaining ? 'TIME LEFT' : 'TIME'}</span>` +
         `</div>`;
     },
   },
@@ -240,8 +245,7 @@ export const QHLAN_ELEMENTS = {
       if (state?.me?.name) mates.add(state.me.name);
       for (const t of (state?.teaminfo || [])) if (t?.name) mates.add(t.name);
       const side = (name) => (mates.has(name) ? 'is-mate' : 'is-enemy');
-      let kills = (state?.events?.messages || []).map(parseKill).filter(Boolean);
-      kills = kills.filter((k, i) => i === 0 || k.killer !== kills[i - 1].killer || k.victim !== kills[i - 1].victim);
+      const kills = parseKillfeed(state?.events?.messages);
       const keep = el.opts?.keep ?? 5;
       node.innerHTML = kills.slice(0, keep).map(k =>
         `<div class="kf"><span class="kf__k ${side(k.killer)}">${esc(k.killer)}</span>` +

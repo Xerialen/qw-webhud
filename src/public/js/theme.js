@@ -1,15 +1,20 @@
 // theme.js — per-spec theming, shared by the overlay and the editor.
 // spec.meta.theme -> a <body> class + (on demand) a Google webfont and a theme CSS file, so the
-// default HUD stays dependency-free. Returns the theme descriptor (or null) so callers can branch
-// (e.g. the Stage's fixed-1080 mode keys off `fixedStage`; the editor picks its element registry).
+// default HUD stays dependency-free. Returns the theme descriptor (or null) so callers can branch:
+// the Stage's fixed-1080 mode keys off `fixedStage`, and render.js / editor.js read the optional
+// `registry` + `palette` fields here (single source of truth) instead of hard-coding per theme.
+import { QHLAN_ELEMENTS, QHLAN_PALETTE } from './qhlan-elements.js';
+
 export const THEMES = {
   minecraft:   { cls: 'mc', font: 'Press+Start+2P' },                 // styling lives in hud.css (body.mc)
   bladerunner: { cls: 'br', font: 'Orbitron:wght@500;700;900' },      // styling lives in hud.css (body.br)
   qhlan: {
     cls: 'qhlan',
     font: 'Saira+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700',
-    css: '/css/qhlan.css',   // full QHLAN component styling, scoped under body.qhlan
-    fixedStage: true,        // render on a 1920x1080 stage scaled as a whole (not the --u model)
+    css: '/css/qhlan.css',      // full QHLAN component styling, scoped under body.qhlan
+    fixedStage: true,           // render on a 1920x1080 stage scaled as a whole (not the --u model)
+    registry: QHLAN_ELEMENTS,   // rich theme: brings its own element registry + editor palette
+    palette: QHLAN_PALETTE,
   },
 };
 

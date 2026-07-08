@@ -2,8 +2,7 @@
 // mockup background; lets you drag/select/style elements and save/load the spec as JSON.
 import { Stage } from './render.js';
 import { ELEMENTS, PALETTE } from './elements.js';
-import { QHLAN_ELEMENTS, QHLAN_PALETTE } from './qhlan-elements.js';
-import { applyTheme } from './theme.js';
+import { applyTheme, THEMES } from './theme.js';
 import { DEFAULT_SPEC, SAMPLE_STATE } from './specs.js';
 import { Feed } from './feed.js';
 
@@ -20,9 +19,10 @@ let spec = clone(DEFAULT_SPEC);
 let selectedId = null;
 let live = false;
 
-// themed specs (meta.theme === 'qhlan') use a different element registry + editor palette.
-const regFor = (sp) => (sp?.meta?.theme === 'qhlan' ? QHLAN_ELEMENTS : ELEMENTS);
-const paletteFor = (sp) => (sp?.meta?.theme === 'qhlan' ? QHLAN_PALETTE : PALETTE);
+// rich themes bring their own element registry + editor palette (declared on the THEMES descriptor);
+// everything else uses the default registry/palette.
+const regFor = (sp) => THEMES[sp?.meta?.theme]?.registry || ELEMENTS;
+const paletteFor = (sp) => THEMES[sp?.meta?.theme]?.palette || PALETTE;
 
 // type-specific option editors: { key, label, kind, options? }
 const OPT_FIELDS = {
